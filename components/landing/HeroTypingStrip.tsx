@@ -36,7 +36,7 @@ export function HeroTypingStrip() {
       <div className="relative mb-4 h-14 overflow-hidden rounded-sm border border-lane bg-track">
         <div className="absolute inset-x-3 top-1/2 h-px -translate-y-1/2 border-t border-dashed border-chalk-muted/30" />
         <div
-          className="absolute top-1/2 w-20 -translate-y-1/2 will-change-transform"
+          className="absolute top-1/2 w-20 will-change-transform"
           style={{
             left: `calc(${progress * 100}% - ${progress * 5}rem)`,
             transform: "translateY(-50%)",
@@ -66,8 +66,7 @@ export function HeroTypingStrip() {
           {HERO_PASSAGE.split("").map((char, i) => {
             let color = "text-chalk-muted";
             if (i < typed.length) {
-              color =
-                typed[i] === char ? "text-cyan" : "text-danger underline";
+              color = typed[i] === char ? "text-cyan" : "text-danger underline";
             } else if (i === typed.length) {
               color = "text-chalk border-b-2 border-signal";
             }
