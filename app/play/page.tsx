@@ -24,10 +24,7 @@ const MODES = [
 export default function ModeSelectPage() {
   return (
     <main className="asphalt-grain flex min-h-dvh flex-col px-5 py-10 sm:px-8">
-      <Link
-        href="/"
-        className="font-logo text-2xl text-chalk sm:text-3xl"
-      >
+      <Link href="/" className="font-logo text-2xl text-chalk sm:text-3xl">
         Clack<span className="text-cyan">Race</span>
       </Link>
 

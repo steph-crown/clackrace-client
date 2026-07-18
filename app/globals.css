@@ -35,7 +35,6 @@
   --color-danger: var(--danger);
 
   --font-logo: var(--font-faster-one);
-  /* --font-logo: var(--font-racing-sans); */
   --font-heading: var(--font-chakra);
   --font-sans: var(--font-space-grotesk);
   --font-mono: var(--font-jetbrains);
@@ -94,6 +93,21 @@
 .checkered-strip {
   background-image: repeating-conic-gradient(#0c0e12 0% 25%, #e8e6e1 0% 50%);
   background-size: 16px 16px;
+}
+
+@keyframes countdown-pop {
+  from {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.countdown-pop {
+  animation: countdown-pop 0.45s ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {

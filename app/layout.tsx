@@ -1,19 +1,11 @@
 import type { Metadata } from "next";
 import {
   Chakra_Petch,
-  JetBrains_Mono,
-  Racing_Sans_One,
-  Space_Grotesk,
   Faster_One,
+  JetBrains_Mono,
+  Space_Grotesk,
 } from "next/font/google";
 import "./globals.css";
-
-const racingSans = Racing_Sans_One({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-racing-sans",
-  display: "swap",
-});
 
 const fasterOne = Faster_One({
   weight: "400",
@@ -55,7 +47,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${racingSans.variable} ${chakraPetch.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${fasterOne.variable} h-full antialiased`}
+      className={`${fasterOne.variable} ${chakraPetch.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>
