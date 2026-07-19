@@ -24,6 +24,8 @@ import {
   progressOf,
   type TypingState,
 } from "@/lib/typing/engine";
+import { raceAudio } from "@/lib/audio/manager";
+import { resultsAudioCue } from "@/lib/race/placement";
 import { PageShell } from "@/components/ui/PageShell";
 import { ResultScreen } from "./ResultScreen";
 import type { TrackRacer } from "./RaceTrack";
@@ -56,6 +58,7 @@ export function SoloRaceApp() {
   const raceStartPerfRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
   const lastFrameRef = useRef<number>(0);
+  const countdownIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     void fetchPassages().then(setPassages);
@@ -109,6 +112,19 @@ export function SoloRaceApp() {
       );
       setResults(ranked);
       setPhase("results");
+      raceAudio.stopRaceBed();
+      raceAudio.play("finish");
+      const youForAudio = ranked.find((r) => r.isYou);
+      if (youForAudio) {
+        const cue = resultsAudioCue(youForAudio.placement);
+        raceAudio.play(
+          cue === "win"
+            ? "resultsWin"
+            : cue === "podium"
+              ? "resultsPodium"
+              : "resultsFinish",
+        );
+      }
 
       const you = ranked.find((r) => r.isYou);
       if (!you || !passage) return;
@@ -188,26 +204,43 @@ export function SoloRaceApp() {
     setLiveAccuracy(100);
     setPhase("countdown");
 
+    if (countdownIdRef.current != null) {
+      window.clearInterval(countdownIdRef.current);
+      countdownIdRef.current = null;
+    }
+
     const steps: Array<number | "GO"> = [3, 2, 1, "GO"];
     let i = 0;
     setCountdown(steps[0]!);
+    raceAudio.play("countdown");
 
-    const id = window.setInterval(() => {
+    countdownIdRef.current = window.setInterval(() => {
       i += 1;
       if (i >= steps.length) {
-        window.clearInterval(id);
+        if (countdownIdRef.current != null) {
+          window.clearInterval(countdownIdRef.current);
+          countdownIdRef.current = null;
+        }
         setCountdown(null);
         setPhase("racing");
+        raceAudio.play("raceBed");
         startLoop();
         return;
       }
-      setCountdown(steps[i]!);
+      const step = steps[i]!;
+      setCountdown(step);
+      if (step === "GO") raceAudio.play("go");
+      else raceAudio.play("countdown");
     }, 700);
   }, [passages, difficulty, cpuCount, startLoop]);
 
   useEffect(() => {
     return () => {
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      if (countdownIdRef.current != null) {
+        window.clearInterval(countdownIdRef.current);
+      }
+      raceAudio.stopRaceBed();
     };
   }, []);
 
@@ -228,11 +261,20 @@ export function SoloRaceApp() {
     setTyping(next);
   }, [phase]);
 
-  const resetToSetup = () => {
+  const stopRaceRuntime = () => {
     if (rafRef.current != null) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     }
+    if (countdownIdRef.current != null) {
+      window.clearInterval(countdownIdRef.current);
+      countdownIdRef.current = null;
+    }
+    raceAudio.stopRaceBed();
+  };
+
+  const resetToSetup = () => {
+    stopRaceRuntime();
     setPhase("setup");
     setPassage(null);
     setTyping(null);
@@ -240,6 +282,11 @@ export function SoloRaceApp() {
     setCountdown(null);
     setResults([]);
     setSubmitted(null);
+  };
+
+  const restartRace = () => {
+    stopRaceRuntime();
+    beginCountdown();
   };
 
   if (phase === "setup") {
@@ -279,6 +326,7 @@ export function SoloRaceApp() {
       typingEnabled={phase === "racing"}
       onChar={onChar}
       onBackspace={onBackspace}
+      onRestart={restartRace}
     />
   );
 }

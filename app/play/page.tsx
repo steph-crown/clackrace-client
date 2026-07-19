@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ModeCard } from "@/components/ui/ModeCard";
 import { PageShell } from "@/components/ui/PageShell";
+import { RaceChrome } from "@/components/race/RaceChrome";
 import { createPublicSession } from "@/lib/api/client";
 import { getOrCreateGuestSessionToken } from "@/lib/guest-token";
 
@@ -24,7 +25,7 @@ export default function ModeSelectPage() {
   };
 
   return (
-    <PageShell centered logoHref="/">
+    <PageShell centered logoHref="/" headerRight={<RaceChrome />}>
       <Eyebrow>Select mode</Eyebrow>
       <h1 className="mt-3 font-heading text-4xl font-bold uppercase tracking-wide text-chalk sm:text-5xl">
         How do you want to race?

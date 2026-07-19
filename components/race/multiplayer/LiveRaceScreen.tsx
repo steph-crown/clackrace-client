@@ -4,6 +4,7 @@ import { Logo } from "@/components/ui/Logo";
 import { Toast } from "@/components/ui/Toast";
 import { CountdownOverlay } from "@/components/race/CountdownOverlay";
 import { FinishedWaiting } from "@/components/race/FinishedWaiting";
+import { RaceChrome } from "@/components/race/RaceChrome";
 import { RaceHud } from "@/components/race/RaceHud";
 import { RaceTrack, type TrackRacer } from "@/components/race/RaceTrack";
 import { TypingPanel } from "@/components/race/TypingPanel";
@@ -38,9 +39,12 @@ export function LiveRaceScreen({
   return (
     <main className="asphalt-grain relative flex min-h-dvh flex-col px-5 py-6 sm:px-8">
       {toast ? <Toast message={toast} /> : null}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between gap-3">
         <Logo href="/play" size="sm" />
-        <RaceHud wpm={wpm} accuracy={accuracy} />
+        <div className="flex items-center gap-3">
+          <RaceHud wpm={wpm} accuracy={accuracy} />
+          <RaceChrome currentMode="public" compact />
+        </div>
       </div>
       <div className="relative mx-auto w-full max-w-4xl flex-1">
         <CountdownOverlay value={countdown} />

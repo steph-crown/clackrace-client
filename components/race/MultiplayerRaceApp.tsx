@@ -15,6 +15,8 @@ import {
   progressOf,
   type TypingState,
 } from "@/lib/typing/engine";
+import { raceAudio } from "@/lib/audio/manager";
+import { resultsAudioCue } from "@/lib/race/placement";
 import type { TrackRacer } from "./RaceTrack";
 import { ConnectingState } from "./multiplayer/ConnectingState";
 import { JoinErrorState } from "./multiplayer/JoinErrorState";
@@ -87,6 +89,7 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
       const token = getOrCreateGuestSessionToken();
       const suggested = pickSuggestedName(info.takenNames);
       if (!socket.connected) socket.connect();
+      void raceAudio.ensureUnlocked();
 
       socket.emit(
         "session:join",
@@ -158,7 +161,10 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
       setPhase("countdown");
       setCountdown(p.value);
       if (p.value === "GO") {
+        raceAudio.play("go");
         window.setTimeout(() => setCountdown(null), 400);
+      } else {
+        raceAudio.play("countdown");
       }
     };
     const onRaceStart = (p: { passageText: string }) => {
@@ -175,6 +181,7 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
       setResults([]);
       setPhase("racing");
       setCountdown(null);
+      raceAudio.play("raceBed");
     };
     const onPositions = (p: {
       positions: Record<string, { progress: number }>;
@@ -195,6 +202,20 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
       setPhase("results");
       setTyping(null);
       typingRef.current = null;
+      raceAudio.stopRaceBed();
+      raceAudio.play("finish");
+      const me = memberIdRef.current;
+      const you = p.results.find((r) => r.memberId === me && r.finished);
+      if (you) {
+        const cue = resultsAudioCue(you.placement);
+        raceAudio.play(
+          cue === "win"
+            ? "resultsWin"
+            : cue === "podium"
+              ? "resultsPodium"
+              : "resultsFinish",
+        );
+      }
     };
 
     socket.on("session:state", onState);
@@ -210,6 +231,7 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
 
     return () => {
       cancelled = true;
+      raceAudio.stopRaceBed();
       socket.off("session:state", onState);
       socket.off("session:toast", onToast);
       socket.off("session:error", onError);

@@ -1,10 +1,12 @@
 "use client";
 
 import type { CpuDifficulty } from "@/lib/cpu/simulate";
+import { raceAudio } from "@/lib/audio/manager";
 import { Button } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PageShell } from "@/components/ui/PageShell";
 import { cn } from "@/lib/utils/cn";
+import { RaceChrome } from "../RaceChrome";
 
 type SoloSetupProps = {
   difficulty: CpuDifficulty;
@@ -22,7 +24,11 @@ export function SoloSetup({
   onStart,
 }: SoloSetupProps) {
   return (
-    <PageShell centered logoHref="/play">
+    <PageShell
+      centered
+      logoHref="/play"
+      headerRight={<RaceChrome currentMode="solo" />}
+    >
       <Eyebrow>Race CPU</Eyebrow>
       <h1 className="mt-3 font-heading text-4xl font-bold uppercase tracking-wide text-chalk sm:text-5xl">
         Solo setup
@@ -69,7 +75,15 @@ export function SoloSetup({
           />
         </div>
 
-        <Button type="button" size="lg" onClick={onStart} className="sm:min-w-[220px]">
+        <Button
+          type="button"
+          size="lg"
+          onClick={() => {
+            void raceAudio.ensureUnlocked();
+            onStart();
+          }}
+          className="sm:min-w-[220px]"
+        >
           Start race
         </Button>
       </div>
