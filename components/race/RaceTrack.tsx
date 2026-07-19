@@ -1,6 +1,4 @@
-"use client";
-
-import { CarSvg } from "./CarSvg";
+import { RaceLane } from "./RaceLane";
 
 export type TrackRacer = {
   id: string;
@@ -15,10 +13,7 @@ type RaceTrackProps = {
   racers: TrackRacer[];
 };
 
-/**
- * DOM/SVG track. Position with `left` (containing-block %) — not translateX(%),
- * which is relative to the car's own width and barely moves.
- */
+/** DOM/SVG track. Finish flag on the right; cars face right toward it. */
 export function RaceTrack({ racers }: RaceTrackProps) {
   const laneHeight = Math.max(
     56,
@@ -31,31 +26,14 @@ export function RaceTrack({ racers }: RaceTrackProps) {
       style={{ height: racers.length * laneHeight + 16 }}
     >
       <div className="checkered-strip absolute inset-y-0 right-0 z-[1] w-3 opacity-90" />
-      {racers.map((racer, i) => {
-        const progress = Math.min(1, Math.max(0, racer.progress));
-        return (
-          <div
-            key={racer.id}
-            className="absolute inset-x-0"
-            style={{ top: 8 + i * laneHeight, height: laneHeight - 8 }}
-          >
-            <div className="absolute inset-x-3 top-1/2 h-px -translate-y-1/2 border-t border-dashed border-chalk-muted/25" />
-            <div
-              className="absolute top-1/2 w-20 will-change-[left,transform]"
-              style={{
-                left: `calc(${progress * 100}% - ${progress * 5}rem)`,
-                transform: "translateY(-50%)",
-              }}
-            >
-              <CarSvg
-                bodyColor={racer.bodyColor}
-                accentColor={racer.accentColor}
-                label={racer.isYou ? "You" : racer.label}
-              />
-            </div>
-          </div>
-        );
-      })}
+      {racers.map((racer, i) => (
+        <RaceLane
+          key={racer.id}
+          racer={racer}
+          top={8 + i * laneHeight}
+          height={laneHeight - 8}
+        />
+      ))}
     </div>
   );
 }

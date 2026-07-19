@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { ButtonLink } from "@/components/ui/ButtonLink";
+import { Logo } from "@/components/ui/Logo";
 import { CarSvg } from "@/components/race/CarSvg";
 import { HeroTypingStrip } from "./HeroTypingStrip";
 import { SiteNav } from "./SiteNav";
@@ -57,27 +58,15 @@ export function Hero() {
         <p className="mb-4 font-heading text-xs font-semibold uppercase tracking-[0.35em] text-cyan">
           Arcade typing races
         </p>
-        <h1 className="font-logo text-5xl leading-none tracking-wide text-chalk sm:text-7xl md:text-8xl">
-          Clack<span className="text-cyan">Race</span>
-        </h1>
+        <h1><Logo href={undefined} size="lg" /></h1>
         <p className="mt-5 max-w-md font-sans text-base text-chalk-muted sm:text-lg">
           Type the passage. Watch your car fly. Race CPU, friends, or anyone
           with the link.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href="/play"
-            className="rounded-sm bg-cyan px-8 py-3.5 font-heading text-sm font-bold uppercase tracking-wider text-asphalt transition-transform hover:scale-[1.03] active:scale-[0.98]"
-          >
-            Play Now
-          </Link>
-          <Link
-            href="/signin"
-            className="rounded-sm border border-chalk/30 px-8 py-3.5 font-heading text-sm font-semibold uppercase tracking-wider text-chalk transition-colors hover:border-chalk/55 hover:bg-chalk/5"
-          >
-            Sign in
-          </Link>
+          <ButtonLink href="/play" size="lg">Play now</ButtonLink>
+          <ButtonLink href="/signin" variant="ghost" size="lg">Sign in</ButtonLink>
         </div>
 
         <div className="mt-10 w-full max-w-xl">

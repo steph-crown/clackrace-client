@@ -51,6 +51,16 @@
     font-family: var(--font-sans), system-ui, sans-serif;
   }
 
+  a,
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
   ::selection {
     background: color-mix(in srgb, var(--cyan) 35%, transparent);
     color: var(--chalk);

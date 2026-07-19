@@ -10,6 +10,10 @@ type TypingPanelProps = {
   onBackspace: () => void;
 };
 
+/**
+ * Mobile-safe typing: real devices often skip per-key `keydown` for characters.
+ * Drive from the controlled value via `onChange` (same idea as the hero strip).
+ */
 export function TypingPanel({
   passage,
   typed,
@@ -31,8 +35,10 @@ export function TypingPanel({
       <p className="mb-2 font-heading text-[10px] font-semibold uppercase tracking-[0.2em] text-chalk-muted">
         {enabled ? "Type the passage" : "Wait for green…"}
       </p>
-      {/* Regular spaces so the passage can wrap like a textarea */}
-      <p className="font-mono text-base leading-relaxed break-words whitespace-pre-wrap sm:text-lg">
+      <p
+        className="pointer-events-none font-mono text-base leading-relaxed break-words whitespace-pre-wrap sm:text-lg"
+        aria-hidden
+      >
         {passage.split("").map((char, i) => {
           let cls = "text-chalk-muted";
           if (i < typed.length) {
@@ -49,7 +55,6 @@ export function TypingPanel({
             </span>
           );
         })}
-        {/* Trailing mistypes past passage end */}
         {typed.length > passage.length
           ? typed
               .slice(passage.length)
@@ -67,25 +72,31 @@ export function TypingPanel({
       <textarea
         ref={inputRef}
         disabled={!enabled}
-        value=""
-        rows={1}
-        onChange={() => {
-          /* keys handled below */
+        value={typed}
+        rows={3}
+        inputMode="text"
+        enterKeyHint="done"
+        onChange={(e) => {
+          if (!enabled) return;
+          const next = e.target.value;
+          if (next.length < typed.length) {
+            const n = typed.length - next.length;
+            for (let i = 0; i < n; i++) onBackspace();
+            return;
+          }
+          if (next.length > typed.length) {
+            const added = next.slice(typed.length);
+            for (const ch of added) {
+              if (ch === "\n" || ch === "\r") continue;
+              onChar(ch);
+            }
+          }
         }}
         onKeyDown={(e) => {
+          // Keep desktop shortcuts snappy; mobile mainly uses onChange.
           if (!enabled) return;
-          if (e.key === "Backspace") {
-            e.preventDefault();
-            onBackspace();
-            return;
-          }
           if (e.key === "Tab" || e.key === "Enter") {
             e.preventDefault();
-            return;
-          }
-          if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-            e.preventDefault();
-            onChar(e.key);
           }
         }}
         onPaste={(e) => e.preventDefault()}
@@ -94,7 +105,7 @@ export function TypingPanel({
         autoCapitalize="off"
         spellCheck={false}
         aria-label="Race typing input"
-        className="absolute inset-0 resize-none cursor-text opacity-0 disabled:cursor-not-allowed"
+        className="absolute inset-0 z-10 resize-none bg-transparent text-base caret-signal text-transparent selection:bg-cyan/30 disabled:cursor-not-allowed"
       />
     </div>
   );

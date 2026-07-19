@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchPassages, submitSoloResult } from "@/lib/api/client";
 import {
@@ -25,10 +24,11 @@ import {
   progressOf,
   type TypingState,
 } from "@/lib/typing/engine";
-import { CountdownOverlay } from "./CountdownOverlay";
-import { RaceTrack, type TrackRacer } from "./RaceTrack";
+import { PageShell } from "@/components/ui/PageShell";
 import { ResultScreen } from "./ResultScreen";
-import { TypingPanel } from "./TypingPanel";
+import type { TrackRacer } from "./RaceTrack";
+import { SoloLiveRace } from "./solo/SoloLiveRace";
+import { SoloSetup } from "./solo/SoloSetup";
 
 type Phase = "setup" | "countdown" | "racing" | "results";
 
@@ -244,116 +244,41 @@ export function SoloRaceApp() {
 
   if (phase === "setup") {
     return (
-      <main className="asphalt-grain flex min-h-dvh flex-col px-5 py-10 sm:px-8">
-        <Link href="/play" className="font-logo text-2xl text-chalk sm:text-3xl">
-          Clack<span className="text-cyan">Race</span>
-        </Link>
-
-        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center py-16">
-          <p className="font-heading text-xs font-semibold uppercase tracking-[0.3em] text-cyan">
-            Race CPU
-          </p>
-          <h1 className="mt-3 font-heading text-4xl font-bold uppercase tracking-wide text-chalk sm:text-5xl">
-            Solo setup
-          </h1>
-          <p className="mt-3 max-w-lg text-sm text-chalk-muted sm:text-base">
-            Pick difficulty and how many CPU racers, then go.
-          </p>
-
-          <div className="mt-12 space-y-8">
-            <div>
-              <p className="font-heading text-[10px] font-semibold uppercase tracking-[0.2em] text-chalk-muted">
-                Difficulty
-              </p>
-              <div className="mt-3 grid grid-cols-3 gap-3">
-                {(["easy", "medium", "hard"] as const).map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => setDifficulty(d)}
-                    className={`rounded-sm border px-3 py-4 font-heading text-sm font-semibold uppercase tracking-wider ${
-                      difficulty === d
-                        ? "border-cyan bg-cyan/10 text-cyan"
-                        : "border-lane text-chalk hover:border-chalk/40"
-                    }`}
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="font-heading text-[10px] font-semibold uppercase tracking-[0.2em] text-chalk-muted">
-                CPU racers — {cpuCount}
-              </p>
-              <input
-                type="range"
-                min={1}
-                max={7}
-                value={cpuCount}
-                onChange={(e) => setCpuCount(Number(e.target.value))}
-                className="mt-4 w-full accent-cyan"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={beginCountdown}
-              className="w-full rounded-sm bg-cyan px-6 py-4 font-heading text-sm font-bold uppercase tracking-wider text-asphalt transition-transform hover:scale-[1.01] sm:w-auto sm:min-w-[220px]"
-            >
-              Start race
-            </button>
-          </div>
-        </div>
-      </main>
+      <SoloSetup
+        difficulty={difficulty}
+        cpuCount={cpuCount}
+        onDifficultyChange={setDifficulty}
+        onCpuCountChange={setCpuCount}
+        onStart={beginCountdown}
+      />
     );
   }
 
   if (phase === "results") {
     return (
-      <main className="asphalt-grain flex min-h-dvh flex-col px-5 py-10 sm:px-8">
-        <Link href="/" className="font-logo text-2xl text-chalk sm:text-3xl">
-          Clack<span className="text-cyan">Race</span>
-        </Link>
-        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center py-12">
-          <ResultScreen
-            results={results}
-            submitted={submitted}
-            onPlayAgain={resetToSetup}
-          />
-        </div>
-      </main>
+      <PageShell centered>
+        <ResultScreen
+          results={results}
+          submitted={submitted}
+          onPlayAgain={resetToSetup}
+        />
+      </PageShell>
     );
   }
 
-  return (
-    <main className="asphalt-grain relative flex min-h-dvh flex-col px-5 py-6 sm:px-8">
-      <div className="mb-4 flex items-center justify-between">
-        <Link href="/play" className="font-logo text-xl text-chalk sm:text-2xl">
-          Clack<span className="text-cyan">Race</span>
-        </Link>
-        <div className="flex gap-4 font-mono text-sm">
-          <span className="text-cyan">{Math.round(liveWpm)} WPM</span>
-          <span className="text-chalk-muted">{Math.round(liveAccuracy)}%</span>
-        </div>
-      </div>
+  if (!typing) return null;
 
-      <div className="relative mx-auto w-full max-w-4xl flex-1">
-        <CountdownOverlay value={countdown} />
-        <RaceTrack racers={trackRacers} />
-        <div className="mt-6">
-          {typing ? (
-            <TypingPanel
-              passage={typing.passage}
-              typed={typing.typed}
-              enabled={phase === "racing"}
-              onChar={onChar}
-              onBackspace={onBackspace}
-            />
-          ) : null}
-        </div>
-      </div>
-    </main>
+  return (
+    <SoloLiveRace
+      countdown={countdown}
+      racers={trackRacers}
+      wpm={liveWpm}
+      accuracy={liveAccuracy}
+      passage={typing.passage}
+      typed={typing.typed}
+      typingEnabled={phase === "racing"}
+      onChar={onChar}
+      onBackspace={onBackspace}
+    />
   );
 }

@@ -109,6 +109,32 @@ export function applyBackspace(state: TypingState): TypingState {
   };
 }
 
+/**
+ * Sync engine to a full typed buffer (mobile `input` / `onChange` path).
+ * Uses refs of applyKey/applyBackspace so multi-char updates stay consistent.
+ */
+export function reconcileTyped(
+  state: TypingState,
+  nextTyped: string,
+  nowMs: number,
+): TypingState {
+  if (state.finishedAtMs !== null) return state;
+
+  let s = state;
+  const capped = nextTyped.slice(0, state.passage.length + 8);
+
+  while (s.typed.length > 0 && !capped.startsWith(s.typed)) {
+    s = applyBackspace(s);
+  }
+  while (s.typed.length > capped.length) {
+    s = applyBackspace(s);
+  }
+  for (let i = s.typed.length; i < capped.length; i++) {
+    s = applyKey(s, capped[i]!, nowMs);
+  }
+  return s;
+}
+
 export function progressOf(state: TypingState): number {
   if (state.passage.length === 0) return 0;
   return state.correctIndex / state.passage.length;
