@@ -2,10 +2,15 @@
 
 const CLACK = "/api/clack";
 
+export type ApiError = {
+  code: string;
+  message: string;
+};
+
 async function clackFetch<T>(
   path: string,
   init?: RequestInit,
-): Promise<{ ok: true; data: T } | { ok: false; status: number; error?: string }> {
+): Promise<{ ok: true; data: T } | { ok: false; status: number; error: ApiError }> {
   try {
     const res = await fetch(`${CLACK}${path}`, {
       ...init,
@@ -16,16 +21,37 @@ async function clackFetch<T>(
       },
     });
     if (!res.ok) {
-      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      const body = (await res.json().catch(() => ({}))) as {
+        error?: string | { code?: string; message?: string };
+        message?: string;
+        code?: string;
+      };
+      const nested =
+        typeof body.error === "object" && body.error != null
+          ? body.error
+          : null;
+      const message =
+        nested?.message ??
+        (typeof body.error === "string" ? body.error : null) ??
+        body.message ??
+        "Something went wrong. Try again.";
+      const code = nested?.code ?? body.code ?? "error";
       return {
         ok: false,
         status: res.status,
-        error: typeof body.error === "string" ? body.error : undefined,
+        error: { code, message },
       };
     }
     return { ok: true, data: (await res.json()) as T };
   } catch {
-    return { ok: false, status: 0 };
+    return {
+      ok: false,
+      status: 0,
+      error: {
+        code: "network",
+        message: "Couldn't reach the server. Check your connection.",
+      },
+    };
   }
 }
 
@@ -105,7 +131,7 @@ export type ChallengeRecord = {
   id: string;
   requesterId: string;
   requesterUsername: string;
-  recipientId: string;
+  recipientId: string | null;
   recipientEmail: string;
   recipientUsername: string | null;
   status: string;
@@ -145,6 +171,10 @@ export async function revokeChallenge(id: string) {
 
 export async function fetchChallenge(id: string) {
   return clackFetch<{ challenge: ChallengeRecord }>(`/challenges/${id}`);
+}
+
+export async function fetchSocketToken() {
+  return clackFetch<{ token: string }>("/auth/socket-token");
 }
 
 export function notificationsStreamUrl() {

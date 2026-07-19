@@ -59,7 +59,7 @@ export default function SettingsPage() {
     });
     setBusy(false);
     if (!res.ok) {
-      setMessage(res.error ?? "Could not save");
+      setMessage(res.error.message);
       return;
     }
     setMessage("Saved");

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { claimGuestSessionIfPresent } from "@/lib/auth/claim";
@@ -153,12 +152,6 @@ export default function SignInPage() {
           <ButtonLink href="/play" variant="secondary">
             Play as guest
           </ButtonLink>
-          <Link
-            href="/settings"
-            className="font-heading text-xs font-semibold uppercase tracking-wider text-chalk-muted hover:text-chalk"
-          >
-            Settings
-          </Link>
         </div>
       </div>
     </PageShell>

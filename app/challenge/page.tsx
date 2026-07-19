@@ -93,16 +93,22 @@ export default function ChallengePage() {
     const res = await createChallenge(target.trim());
     setBusy(false);
     if (!res.ok) {
-      setError(res.error ?? "Could not send challenge");
+      setError(res.error.message);
       return;
     }
     setPending(res.data.challenge);
-    if (res.data.emailDelivery === "logged") {
-      setNote("They’re offline — invite URL logged on the server (dev).");
+    if (!res.data.challenge.recipientId) {
+      setNote(
+        res.data.emailDelivery === "sent"
+          ? "Invite sent — they'll need to sign up to race."
+          : "Invite queued — check server logs for the signup link (dev).",
+      );
+    } else if (res.data.emailDelivery === "logged") {
+      setNote("They're offline — invite URL logged on the server (dev).");
     } else if (res.data.emailDelivery === "sent") {
       setNote("Invite email sent.");
     } else if (res.data.emailDelivery === "rate_limited") {
-      setNote("Email rate limit hit — try again later.");
+      setNote("Too many invites sent. Try again later.");
     }
   };
 

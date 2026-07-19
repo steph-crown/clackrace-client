@@ -137,10 +137,15 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
           if (cancelled) return;
           if (!res?.ok) {
             setPhase("error");
+            const code = res?.code;
             setError(
-              res?.code === "full"
+              code === "full"
                 ? "This race is full."
-                : (res?.message ?? "Could not join."),
+                : code === "auth_required"
+                  ? "Sign in to join this challenge."
+                  : code === "forbidden"
+                    ? "This challenge is private."
+                    : (res?.message ?? "Could not join."),
             );
             return;
           }

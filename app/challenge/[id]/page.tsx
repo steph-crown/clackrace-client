@@ -48,7 +48,7 @@ export default function ChallengeInvitePage() {
       router.push(`/play/${res.data.sessionId}`);
       return;
     }
-    setError(res.ok ? "Could not open race" : (res.error ?? "Failed"));
+    setError(res.ok ? "Could not open race" : res.error.message);
   };
 
   return (

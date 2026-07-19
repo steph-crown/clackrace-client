@@ -7,6 +7,8 @@ type JoinErrorStateProps = {
 };
 
 export function JoinErrorState({ message }: JoinErrorStateProps) {
+  const needsSignIn = /sign in/i.test(message);
+
   return (
     <PageShell centered logoHref="/play">
       <Eyebrow>Can&apos;t join</Eyebrow>
@@ -14,9 +16,16 @@ export function JoinErrorState({ message }: JoinErrorStateProps) {
         Race unavailable
       </h1>
       <p className="mt-3 text-chalk-muted">{message}</p>
-      <ButtonLink href="/play" variant="secondary" size="sm" className="mt-8">
-        ← Modes
-      </ButtonLink>
+      <div className="mt-8 flex flex-wrap gap-3">
+        {needsSignIn ? (
+          <ButtonLink href="/signin" size="sm">
+            Sign in
+          </ButtonLink>
+        ) : null}
+        <ButtonLink href="/play" variant="secondary" size="sm">
+          ← Modes
+        </ButtonLink>
+      </div>
     </PageShell>
   );
 }
