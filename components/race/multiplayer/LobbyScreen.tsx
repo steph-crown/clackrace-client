@@ -1,5 +1,6 @@
 "use client";
 
+import { SignUpPrompt } from "@/components/auth/SignUpPrompt";
 import { Button } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PageShell } from "@/components/ui/PageShell";
@@ -30,8 +31,11 @@ type LobbyScreenProps = {
   results: MultiplayerRaceResult[];
   shareUrl: string;
   toast?: string | null;
+  visibility?: "public" | "challenge";
+  rematch?: { requestedByMemberId: string } | null;
   onStartRace: () => void;
   onPlayAgain: () => void;
+  onRematchRespond?: (accept: boolean) => void;
   onEndSession: () => void;
   onLeave: () => void;
 };
@@ -47,21 +51,33 @@ export function LobbyScreen({
   results,
   shareUrl,
   toast,
+  visibility = "public",
+  rematch = null,
   onStartRace,
   onPlayAgain,
+  onRematchRespond,
   onEndSession,
   onLeave,
 }: LobbyScreenProps) {
   const youResult = results.find((r) => r.memberId === memberId);
+  const isChallenge = visibility === "challenge";
+  const iRequestedRematch =
+    !!rematch && rematch.requestedByMemberId === memberId;
+  const theyRequestedRematch =
+    !!rematch && rematch.requestedByMemberId !== memberId;
 
   return (
     <PageShell
       centered
       logoHref="/play"
-      headerRight={<RaceChrome currentMode="public" />}
+      headerRight={
+        <RaceChrome currentMode={isChallenge ? "challenge" : "public"} />
+      }
     >
       {toast ? <Toast message={toast} /> : null}
-      <Eyebrow>Race Code: {sessionId}</Eyebrow>
+      <Eyebrow>
+        {isChallenge ? "Direct Challenge" : "Race Code"}: {sessionId}
+      </Eyebrow>
 
       {phase === "results" && youResult?.finished ? (
         <div className="mt-4">
@@ -78,9 +94,11 @@ export function LobbyScreen({
         <span className="text-cyan">You</span>
       </p>
 
-      <div className="mt-8">
-        <InviteLinkCard shareUrl={shareUrl} />
-      </div>
+      {!isChallenge ? (
+        <div className="mt-8">
+          <InviteLinkCard shareUrl={shareUrl} />
+        </div>
+      ) : null}
 
       {phase === "lobby" && !isCreator ? (
         <Button
@@ -149,6 +167,8 @@ export function LobbyScreen({
         </ol>
       ) : null}
 
+      {phase === "results" ? <SignUpPrompt /> : null}
+
       <div className="mt-10">
         <RacerList members={members} memberId={memberId} />
       </div>
@@ -157,7 +177,40 @@ export function LobbyScreen({
         <SessionLeaderboard entries={leaderboard} memberId={memberId} />
       </div>
 
-      {isCreator ? (
+      {isChallenge && phase === "results" ? (
+        <div className="mt-10 flex flex-wrap gap-3">
+          {theyRequestedRematch ? (
+            <>
+              <Button
+                type="button"
+                onClick={() => onRematchRespond?.(true)}
+              >
+                Accept rematch
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => onRematchRespond?.(false)}
+              >
+                Decline
+              </Button>
+            </>
+          ) : iRequestedRematch ? (
+            <p className="text-sm text-chalk-muted">
+              Rematch requested — waiting for the other player…
+            </p>
+          ) : (
+            <Button type="button" onClick={onPlayAgain}>
+              Request rematch
+            </Button>
+          )}
+          {isCreator ? (
+            <Button type="button" variant="secondary" onClick={onEndSession}>
+              End session
+            </Button>
+          ) : null}
+        </div>
+      ) : isCreator ? (
         <div className="mt-10 flex flex-wrap gap-3">
           {phase === "lobby" ? (
             <Button type="button" onClick={onStartRace}>

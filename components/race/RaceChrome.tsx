@@ -100,16 +100,18 @@ export function RaceChrome({
             Public Multiplayer
           </MenuLink>
           <MenuLink
-            href="/play"
+            href="/challenge"
             active={currentMode === "challenge"}
             onNavigate={() => setOpen(false)}
-            muted
           >
             Challenge a Friend
           </MenuLink>
           <div className="my-2 border-t border-lane/60" />
           <MenuLink href="/leaderboard" onNavigate={() => setOpen(false)}>
             Leaderboard
+          </MenuLink>
+          <MenuLink href="/settings" onNavigate={() => setOpen(false)}>
+            Settings
           </MenuLink>
           <MenuLink href="/play" onNavigate={() => setOpen(false)}>
             All modes

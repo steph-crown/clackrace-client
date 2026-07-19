@@ -5,6 +5,7 @@ import {
   JetBrains_Mono,
   Space_Grotesk,
 } from "next/font/google";
+import { ChallengeInbox } from "@/components/challenge/ChallengeInbox";
 import "./globals.css";
 
 const fasterOne = Faster_One({
@@ -49,7 +50,10 @@ export default function RootLayout({
       lang="en"
       className={`${fasterOne.variable} ${chakraPetch.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        {children}
+        <ChallengeInbox />
+      </body>
     </html>
   );
 }

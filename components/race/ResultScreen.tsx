@@ -7,6 +7,7 @@ import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { StatBlock } from "@/components/ui/StatBlock";
 import { cn } from "@/lib/utils/cn";
+import { SignUpPrompt } from "@/components/auth/SignUpPrompt";
 import { MedalBadge } from "./results/MedalBadge";
 import { PlacementHeadline } from "./results/PlacementHeadline";
 import { RaceChrome } from "./RaceChrome";
@@ -94,15 +95,14 @@ export function ResultScreen({
         })}
       </ol>
 
+      <SignUpPrompt />
+
       <div className="flex flex-wrap justify-center gap-3">
         <Button type="button" onClick={onPlayAgain}>
           Race again
         </Button>
         <ButtonLink href="/play" variant="secondary">
           Modes
-        </ButtonLink>
-        <ButtonLink href="/signin" variant="secondary" className="text-chalk-muted">
-          Save this run
         </ButtonLink>
       </div>
     </div>

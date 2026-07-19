@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { pickSuggestedName } from "@/lib/anonymous-names";
 import { fetchSession } from "@/lib/api/client";
+import { getSessionToken } from "@/lib/auth/session-token";
 import { getOrCreateGuestSessionToken } from "@/lib/guest-token";
 import { getSocket } from "@/lib/socket";
 import {
@@ -51,6 +52,10 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
   const [liveAccuracy, setLiveAccuracy] = useState(100);
   const [results, setResults] = useState<MultiplayerRaceResult[]>([]);
   const [localFinished, setLocalFinished] = useState(false);
+  const [visibility, setVisibility] = useState<"public" | "challenge">("public");
+  const [rematch, setRematch] = useState<{
+    requestedByMemberId: string;
+  } | null>(null);
 
   const targetProgress = useRef<Record<string, number>>({});
   const displayProgress = useRef<Record<string, number>>({});
@@ -73,6 +78,20 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
     window.setTimeout(() => setToast(null), 2800);
   }, []);
 
+  // PRD §6.5 — surface common tab-close cases quickly; server remains authoritative
+  useEffect(() => {
+    const onUnload = () => {
+      const s = getSocket();
+      if (s.connected) s.disconnect();
+    };
+    window.addEventListener("pagehide", onUnload);
+    window.addEventListener("beforeunload", onUnload);
+    return () => {
+      window.removeEventListener("pagehide", onUnload);
+      window.removeEventListener("beforeunload", onUnload);
+    };
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     const socket = getSocket();
@@ -88,6 +107,7 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
 
       const token = getOrCreateGuestSessionToken();
       const suggested = pickSuggestedName(info.takenNames);
+      const sessionToken = await getSessionToken();
       if (!socket.connected) socket.connect();
       void raceAudio.ensureUnlocked();
 
@@ -97,6 +117,7 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
           sessionId,
           guestSessionToken: token,
           suggestedName: suggested,
+          sessionToken,
         },
         (res: {
           ok: boolean;
@@ -109,6 +130,8 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
           snapshot?: {
             members: SessionMember[];
             leaderboard: SessionLeaderboardEntry[];
+            visibility?: "public" | "challenge";
+            rematch?: { requestedByMemberId: string } | null;
           };
         }) => {
           if (cancelled) return;
@@ -127,6 +150,10 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
           if (res.snapshot) {
             setMembers(res.snapshot.members);
             setLeaderboard(res.snapshot.leaderboard);
+            if (res.snapshot.visibility) {
+              setVisibility(res.snapshot.visibility);
+            }
+            setRematch(res.snapshot.rematch ?? null);
           }
           setPhase(res.pending ? "waiting_race" : "lobby");
         },
@@ -137,10 +164,14 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
       members: SessionMember[];
       leaderboard: SessionLeaderboardEntry[];
       status: string;
+      visibility?: "public" | "challenge";
+      rematch?: { requestedByMemberId: string } | null;
       you: { pending: boolean; isCreator: boolean; displayName: string } | null;
     }) => {
       setMembers(snap.members);
       setLeaderboard(snap.leaderboard);
+      if (snap.visibility) setVisibility(snap.visibility);
+      setRematch(snap.rematch ?? null);
       if (snap.you) {
         setIsCreator(snap.you.isCreator);
         setDisplayName(snap.you.displayName);
@@ -170,6 +201,7 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
     const onRaceStart = (p: { passageText: string }) => {
       finishedSent.current = false;
       setLocalFinished(false);
+      setRematch(null);
       const state = createTypingState(p.passageText);
       typingRef.current = state;
       setTyping(state);
@@ -379,8 +411,13 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
         results={results}
         shareUrl={shareUrl}
         toast={toast}
+        visibility={visibility}
+        rematch={rematch}
         onStartRace={() => getSocket().emit("race:start")}
         onPlayAgain={() => getSocket().emit("session:playAgain")}
+        onRematchRespond={(accept) =>
+          getSocket().emit("session:rematchRespond", { accept })
+        }
         onEndSession={() => getSocket().emit("session:end")}
         onLeave={() =>
           getSocket().emit("session:leave", () => router.push("/play"))

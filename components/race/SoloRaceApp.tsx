@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { fetchMe } from "@/lib/api/clack";
 import { fetchPassages, submitSoloResult } from "@/lib/api/client";
 import {
   createCpuRacers,
@@ -34,15 +35,11 @@ import { SoloSetup } from "./solo/SoloSetup";
 
 type Phase = "setup" | "countdown" | "racing" | "results";
 
-const PLAYER_CAR = {
-  bodyColor: "var(--cyan)",
-  accentColor: "var(--signal)",
-};
-
 export function SoloRaceApp() {
   const [phase, setPhase] = useState<Phase>("setup");
   const [difficulty, setDifficulty] = useState<CpuDifficulty>("medium");
   const [cpuCount, setCpuCount] = useState(3);
+  const [playerCarColor, setPlayerCarColor] = useState("#2ee6d6");
   const [passages, setPassages] = useState<Passage[]>([]);
   const [passage, setPassage] = useState<Passage | null>(null);
   const [typing, setTyping] = useState<TypingState | null>(null);
@@ -62,6 +59,9 @@ export function SoloRaceApp() {
 
   useEffect(() => {
     void fetchPassages().then(setPassages);
+    void fetchMe().then((res) => {
+      if (res.ok) setPlayerCarColor(res.data.user.carColor);
+    });
   }, []);
 
   useEffect(() => {
@@ -78,8 +78,8 @@ export function SoloRaceApp() {
       id: "you",
       label: "You",
       progress: progressOf(typing),
-      bodyColor: PLAYER_CAR.bodyColor,
-      accentColor: PLAYER_CAR.accentColor,
+      bodyColor: playerCarColor,
+      accentColor: "#e8e6e1",
       isYou: true,
     };
     const bots: TrackRacer[] = cpus.map((c) => ({
@@ -90,7 +90,7 @@ export function SoloRaceApp() {
       accentColor: c.accentColor,
     }));
     return [player, ...bots];
-  }, [typing, cpus, passage]);
+  }, [typing, cpus, passage, playerCarColor]);
 
   const finishRace = useCallback(
     (finalTyping: TypingState, finalCpus: CpuRacer[]) => {
@@ -137,7 +137,7 @@ export function SoloRaceApp() {
       void submitSoloResult({
         passageId: passage.id,
         guestSessionToken: getOrCreateGuestSessionToken(),
-        carColor: "#2ee6d6",
+        carColor: playerCarColor,
         finalWpm: you.wpm,
         finalAccuracy: you.accuracy,
         placement: you.placement,
@@ -150,7 +150,7 @@ export function SoloRaceApp() {
         passageLength: passage.text.length,
       }).then((res) => setSubmitted(res.ok));
     },
-    [passage, difficulty],
+    [passage, difficulty, playerCarColor],
   );
 
   const startLoop = useCallback(() => {

@@ -38,8 +38,10 @@ export async function submitSoloResult(
   payload: SoloResultPayload,
 ): Promise<{ ok: true; raceId: string } | { ok: false }> {
   try {
-    const res = await fetch(`${API_BASE}/races/solo/results`, {
+    // Proxied so session cookies attach for signed-in leaderboard/streak writes.
+    const res = await fetch(`/api/clack/races/solo/results`, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
