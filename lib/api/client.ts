@@ -54,3 +54,53 @@ export async function submitSoloResult(
 export function getApiBase(): string {
   return API_BASE;
 }
+
+export type SessionInfo = {
+  id: string;
+  status: "waiting" | "racing" | "ended";
+  members: {
+    id: string;
+    displayName: string;
+    carColor: string;
+    isCreator: boolean;
+    pending: boolean;
+    disconnected: boolean;
+  }[];
+  takenNames: string[];
+  leaderboard: {
+    memberId: string;
+    displayName: string;
+    bestWpm: number;
+    racesPlayed: number;
+  }[];
+  playerCount: number;
+  maxPlayers: number;
+};
+
+export async function createPublicSession(
+  guestSessionToken: string,
+): Promise<{ id: string } | null> {
+  try {
+    const res = await fetch(`${API_BASE}/sessions/public`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ guestSessionToken }),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as { id: string };
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchSession(
+  id: string,
+): Promise<SessionInfo | null> {
+  try {
+    const res = await fetch(`${API_BASE}/sessions/${id}`);
+    if (!res.ok) return null;
+    return (await res.json()) as SessionInfo;
+  } catch {
+    return null;
+  }
+}

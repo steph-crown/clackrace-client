@@ -9,7 +9,7 @@ const MODES = [
     accent: "cyan" as const,
   },
   {
-    href: "/play",
+    href: "/play/public",
     title: "Public Multiplayer",
     tag: "Share a link",
     copy: "Open a race, drop the link in chat. Anyone with it can join — guests welcome.",
