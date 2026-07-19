@@ -9,7 +9,7 @@ import { InviteLinkCard } from "@/components/race/InviteLinkCard";
 import { RaceChrome } from "@/components/race/RaceChrome";
 import { MedalBadge } from "@/components/race/results/MedalBadge";
 import { PlacementHeadline } from "@/components/race/results/PlacementHeadline";
-import { podiumTier } from "@/lib/race/placement";
+import { placeOrdinal, podiumTier } from "@/lib/race/placement";
 import { cn } from "@/lib/utils/cn";
 import { RacerList } from "./RacerList";
 import { SessionLeaderboard } from "./SessionLeaderboard";
@@ -96,7 +96,10 @@ export function LobbyScreen({
 
       {phase === "results" && youResult ? (
         <dl className="mt-8 grid grid-cols-3 gap-4">
-          <StatBlock label="Place" value={String(youResult.placement)} />
+          <StatBlock
+            label="Position"
+            value={placeOrdinal(youResult.placement)}
+          />
           <StatBlock
             label="WPM"
             value={String(Math.round(youResult.wpm))}

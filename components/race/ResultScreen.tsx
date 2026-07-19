@@ -1,7 +1,7 @@
 "use client";
 
 import type { RacerResult } from "@/lib/race/results";
-import { podiumTier } from "@/lib/race/placement";
+import { placeOrdinal, podiumTier } from "@/lib/race/placement";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -45,8 +45,8 @@ export function ResultScreen({
               value={`${Math.round(you.accuracy)}%`}
             />
             <StatBlock
-              label="Place"
-              value={String(you.placement)}
+              label="Position"
+              value={placeOrdinal(you.placement)}
               accent="signal"
             />
           </dl>

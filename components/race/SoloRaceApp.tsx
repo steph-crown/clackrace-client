@@ -172,7 +172,9 @@ export function SoloRaceApp() {
 
       const t = typingRef.current;
       if (t?.startedAtMs != null) {
-        setLiveWpm(computeWpm(t.correctIndex, t.startedAtMs, now));
+        const wpm = computeWpm(t.correctIndex, t.startedAtMs, now);
+        setLiveWpm(wpm);
+        raceAudio.setDrivingFromWpm(wpm);
         setLiveAccuracy(computeAccuracy(t.correctIndex, t.attempts));
       }
 
@@ -189,7 +191,9 @@ export function SoloRaceApp() {
 
   const beginCountdown = useCallback(() => {
     const pool = passages.length > 0 ? passages : undefined;
-    const picked = pickPassage(difficulty as PassageDifficulty, pool);
+    const passageDifficulty: PassageDifficulty =
+      difficulty === "expert" ? "hard" : difficulty;
+    const picked = pickPassage(passageDifficulty, pool);
     const state = createTypingState(picked.text);
     const bots = createCpuRacers(difficulty, cpuCount);
 

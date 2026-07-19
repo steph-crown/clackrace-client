@@ -264,9 +264,13 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
       if (t && me) {
         displayProgress.current[me] = progressOf(t);
         if (t.startedAtMs != null) {
-          setLiveWpm(
-            computeWpm(t.correctIndex, t.startedAtMs, performance.now()),
+          const wpm = computeWpm(
+            t.correctIndex,
+            t.startedAtMs,
+            performance.now(),
           );
+          setLiveWpm(wpm);
+          raceAudio.setDrivingFromWpm(wpm);
           setLiveAccuracy(computeAccuracy(t.correctIndex, t.attempts));
         }
       }

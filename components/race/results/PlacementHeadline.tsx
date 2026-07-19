@@ -1,9 +1,16 @@
 import { placeOrdinal, podiumTier } from "@/lib/race/placement";
+import { cn } from "@/lib/utils/cn";
 import { ConfettiBurst } from "./ConfettiBurst";
 import { TrophyIcon } from "./TrophyIcon";
 
 type PlacementHeadlineProps = {
   placement: number;
+};
+
+const titleClass: Record<"gold" | "silver" | "bronze", string> = {
+  gold: "text-signal",
+  silver: "text-[#d8dce4]",
+  bronze: "text-[#e0a36a]",
 };
 
 export function PlacementHeadline({ placement }: PlacementHeadlineProps) {
@@ -24,12 +31,15 @@ export function PlacementHeadline({ placement }: PlacementHeadlineProps) {
           <TrophyIcon tier={tier} />
         </div>
       ) : null}
-      <h1 className="font-heading text-4xl font-bold uppercase tracking-wide text-chalk sm:text-5xl">
+      <h1
+        className={cn(
+          "font-heading text-4xl font-bold uppercase tracking-wide sm:text-5xl",
+          tier ? titleClass[tier] : "text-chalk",
+        )}
+      >
         {title}
       </h1>
-      <p className="mt-2 text-sm text-chalk-muted">
-        {ordinal} this race
-      </p>
+      <p className="mt-2 text-sm text-chalk-muted">{ordinal} place</p>
     </div>
   );
 }

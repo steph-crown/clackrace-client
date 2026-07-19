@@ -1,4 +1,4 @@
-export type CpuDifficulty = "easy" | "medium" | "hard";
+export type CpuDifficulty = "easy" | "medium" | "hard" | "expert";
 
 export type CpuRacer = {
   id: string;
@@ -12,10 +12,15 @@ export type CpuRacer = {
   finishedAtMs: number | null;
 };
 
+/**
+ * Stepped bands — medium→hard was a ~30 WPM cliff; hard is watered down,
+ * and expert owns the old hard ceiling.
+ */
 const TARGET_WPM: Record<CpuDifficulty, [number, number]> = {
-  easy: [28, 42],
-  medium: [52, 72],
-  hard: [85, 115],
+  easy: [30, 45],
+  medium: [50, 68],
+  hard: [70, 88],
+  expert: [90, 112],
 };
 
 const CPU_NAMES = [
@@ -76,25 +81,17 @@ export function tickCpu(
   if (cpu.finishedAtMs !== null) return cpu;
   if (passageLength <= 0) return cpu;
 
-  // Brief hesitation every ~2–4s
   const hesitate =
     Math.sin(raceElapsedMs / 700 + cpu.targetWpm) > 0.92 ? 0.15 : 1;
-  const noise = 0.75 + Math.random() * 0.5;
+  const jitter = 0.85 + Math.random() * 0.3;
   const charsPerMs = (cpu.targetWpm * 5) / 60000;
-  const advance = charsPerMs * dtMs * noise * hesitate;
+  const delta = charsPerMs * dtMs * hesitate * jitter;
+  const next = Math.min(passageLength, cpu.correctIndex + delta);
+  const finishedAtMs = next >= passageLength ? raceElapsedMs : null;
 
-  const correctIndex = Math.min(
-    passageLength,
-    cpu.correctIndex + advance,
-  );
-
-  if (correctIndex >= passageLength) {
-    return {
-      ...cpu,
-      correctIndex: passageLength,
-      finishedAtMs: raceElapsedMs,
-    };
-  }
-
-  return { ...cpu, correctIndex };
+  return {
+    ...cpu,
+    correctIndex: next,
+    finishedAtMs,
+  };
 }

@@ -11,7 +11,7 @@ export type SoloResultPayload = {
   finalAccuracy: number;
   placement: number;
   participantCount: number;
-  cpuDifficulty: "easy" | "medium" | "hard";
+  cpuDifficulty: "easy" | "medium" | "hard" | "expert";
   cpuCount: number;
   durationMs: number;
   mistakes: number;

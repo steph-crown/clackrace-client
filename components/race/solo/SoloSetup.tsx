@@ -42,8 +42,8 @@ export function SoloSetup({
           <p className="font-heading text-[10px] font-semibold uppercase tracking-[0.2em] text-chalk-muted">
             Difficulty
           </p>
-          <div className="mt-3 grid grid-cols-3 gap-3">
-            {(["easy", "medium", "hard"] as const).map((d) => (
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {(["easy", "medium", "hard", "expert"] as const).map((d) => (
               <button
                 key={d}
                 type="button"

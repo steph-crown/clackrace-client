@@ -8,7 +8,7 @@ type MedalBadgeProps = {
 
 const tierClass: Record<NonNullable<PodiumTier>, string> = {
   gold: "border-signal/60 bg-signal/15 text-signal",
-  silver: "border-chalk/40 bg-chalk/10 text-chalk",
+  silver: "border-[#c0c7d4]/70 bg-[#c0c7d4]/15 text-[#e8ecf2]",
   bronze: "border-[#cd7f32]/60 bg-[#cd7f32]/15 text-[#e0a36a]",
 };
 
