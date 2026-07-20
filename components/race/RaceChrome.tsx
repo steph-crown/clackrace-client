@@ -76,7 +76,7 @@ export function RaceChrome({
           setOpen((v) => !v);
         }}
       >
-        {compact ? "Menu" : "Modes"}
+        Menu
       </Button>
       {open ? (
         <div
@@ -126,7 +126,7 @@ export function RaceChrome({
             Settings
           </MenuLink>
           <MenuLink href="/play" onNavigate={() => setOpen(false)}>
-            All modes
+            All Modes
           </MenuLink>
         </div>
       ) : null}

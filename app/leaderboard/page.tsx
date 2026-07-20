@@ -9,6 +9,7 @@ import {
   type LeaderboardScope,
 } from "@/lib/api/clack";
 import { ButtonLink } from "@/components/ui/ButtonLink";
+import { ChampionCrowns } from "@/components/ui/ChampionCrown";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PageShell } from "@/components/ui/PageShell";
 import { RaceChrome } from "@/components/race/RaceChrome";
@@ -34,6 +35,7 @@ type Champion = {
   bestWpm: number;
   carColor: string;
   day: string;
+  userId: string;
 };
 
 export default function LeaderboardPage() {
@@ -42,18 +44,28 @@ export default function LeaderboardPage() {
   const [scope, setScope] = useState<LeaderboardScope>("all_time");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [champion, setChampion] = useState<Champion | null>(null);
+  const [overallId, setOverallId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    void Promise.all([fetchLeaderboard(scope), fetchDailyChampion()]).then(
-      ([board, champ]) => {
-        if (cancelled) return;
-        setEntries(board.ok ? board.data.entries : []);
-        setChampion(champ.ok ? champ.data.champion : null);
-        setLoading(false);
-      },
-    );
+    void Promise.all([
+      fetchLeaderboard(scope),
+      fetchDailyChampion(),
+      scope === "all_time"
+        ? Promise.resolve(null)
+        : fetchLeaderboard("all_time"),
+    ]).then(([board, champ, allTime]) => {
+      if (cancelled) return;
+      setEntries(board.ok ? board.data.entries : []);
+      setChampion(champ.ok ? champ.data.champion : null);
+      if (scope === "all_time" && board.ok) {
+        setOverallId(board.data.entries[0]?.userId ?? null);
+      } else if (allTime?.ok) {
+        setOverallId(allTime.data.entries[0]?.userId ?? null);
+      }
+      setLoading(false);
+    });
     return () => {
       cancelled = true;
     };
@@ -71,8 +83,8 @@ export default function LeaderboardPage() {
         Leaderboard
       </h1>
       <p className="mt-2 max-w-md text-sm text-chalk-muted">
-        Peak WPM for signed-in racers. Daily Champion holds the crown until
-        midnight UTC.
+        Peak WPM for signed-in racers. Daily Champion resets at midnight UTC;
+        Overall Champion is all-time #1.
       </p>
 
       {champion ? (
@@ -84,12 +96,19 @@ export default function LeaderboardPage() {
             className="h-3 w-3 rounded-full"
             style={{ background: champion.carColor }}
           />
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="font-heading text-[10px] font-semibold uppercase tracking-[0.2em] text-signal">
               Daily Champion
             </p>
-            <p className="font-heading text-sm font-bold uppercase text-chalk">
-              {champion.username} · {Math.round(champion.bestWpm)} WPM
+            <p className="flex flex-wrap items-center gap-1.5 font-heading text-sm font-bold uppercase text-chalk">
+              {champion.username}
+              <ChampionCrowns
+                daily
+                overall={!!overallId && champion.userId === overallId}
+              />
+              <span className="font-mono font-normal text-chalk-muted">
+                · {Math.round(champion.bestWpm)} WPM
+              </span>
             </p>
           </div>
         </Link>
@@ -123,30 +142,37 @@ export default function LeaderboardPage() {
               : "No scores yet. Sign in and race to claim a spot."}
           </li>
         ) : (
-          entries.map((e) => (
-            <li
-              key={`${e.userId}-${e.rank}`}
-              className="flex items-center justify-between rounded-sm border border-lane bg-asphalt-raised px-4 py-3"
-            >
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-sm text-chalk-muted">
-                  #{e.rank}
+          entries.map((e) => {
+            const isDaily =
+              !!champion && e.userId === champion.userId && scope !== "rating";
+            const isOverall =
+              !!overallId && e.userId === overallId && scope !== "rating";
+            return (
+              <li
+                key={`${e.userId}-${e.rank}`}
+                className="flex items-center justify-between rounded-sm border border-lane bg-asphalt-raised px-4 py-3"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="font-mono text-sm text-chalk-muted">
+                    #{e.rank}
+                  </span>
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{ background: e.carColor }}
+                  />
+                  <span className="flex min-w-0 items-center gap-1.5 font-heading text-sm font-semibold uppercase tracking-wide text-chalk">
+                    <span className="truncate">{e.username}</span>
+                    <ChampionCrowns daily={isDaily} overall={isOverall} />
+                  </span>
+                </div>
+                <span className="shrink-0 font-mono text-sm text-cyan">
+                  {scope === "rating"
+                    ? `${Math.round(e.bestWpm)} Elo`
+                    : `${Math.round(e.bestWpm)} WPM`}
                 </span>
-                <span
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{ background: e.carColor }}
-                />
-                <span className="font-heading text-sm font-semibold uppercase tracking-wide text-chalk">
-                  {e.username}
-                </span>
-              </div>
-              <span className="font-mono text-sm text-cyan">
-                {scope === "rating"
-                  ? `${Math.round(e.bestWpm)} Elo`
-                  : `${Math.round(e.bestWpm)} WPM`}
-              </span>
-            </li>
-          ))
+              </li>
+            );
+          })
         )}
       </ol>
 

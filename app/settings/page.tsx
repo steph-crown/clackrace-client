@@ -2,12 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { fetchMe, patchMe } from "@/lib/api/clack";
+import {
+  fetchDailyChampion,
+  fetchLeaderboard,
+  fetchMe,
+  patchMe,
+} from "@/lib/api/clack";
 import { useSession, signOut } from "@/lib/auth/client";
 import { CAR_COLOR_PALETTE } from "@/lib/car-colors";
 import { CarSvg } from "@/components/race/CarSvg";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
+import { ChampionCrowns } from "@/components/ui/ChampionCrown";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PageShell } from "@/components/ui/PageShell";
 import { cn } from "@/lib/utils/cn";
@@ -35,6 +41,7 @@ export default function SettingsPage() {
   ]);
   const [badges, setBadges] = useState<string[]>([]);
   const [colors, setColors] = useState<string[]>([...CAR_COLOR_PALETTE]);
+  const [crowns, setCrowns] = useState({ daily: false, overall: false });
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -44,6 +51,7 @@ export default function SettingsPage() {
       router.replace("/signin");
       return;
     }
+    const userId = session.user.id;
     void fetchMe().then((res) => {
       if (!res.ok) return;
       setUsername(res.data.user.username ?? res.data.user.name ?? "");
@@ -61,6 +69,17 @@ export default function SettingsPage() {
       }
       if (res.data.carColors?.length) setColors(res.data.carColors);
     });
+    void Promise.all([fetchDailyChampion(), fetchLeaderboard("all_time")]).then(
+      ([champ, board]) => {
+        setCrowns({
+          daily: champ.ok && champ.data.champion?.userId === userId,
+          overall:
+            board.ok &&
+            board.data.entries[0]?.userId === userId &&
+            board.data.entries[0].rank === 1,
+        });
+      },
+    );
   }, [session, isPending, router]);
 
   const save = async (e: React.FormEvent) => {
@@ -92,8 +111,13 @@ export default function SettingsPage() {
     <PageShell centered logoHref="/play">
       <div className="mx-auto w-full max-w-lg">
         <Eyebrow>Profile</Eyebrow>
-        <h1 className="mt-3 font-heading text-3xl font-bold uppercase tracking-wide text-chalk">
+        <h1 className="mt-3 flex flex-wrap items-center gap-2 font-heading text-3xl font-bold uppercase tracking-wide text-chalk">
           Settings
+          <ChampionCrowns
+            daily={crowns.daily}
+            overall={crowns.overall}
+            size="md"
+          />
         </h1>
         <p className="mt-2 text-sm text-chalk-muted">
           Streak {streak.current} · Best {streak.longest} ·{" "}
@@ -114,9 +138,21 @@ export default function SettingsPage() {
               {m.days}-day {m.unlocked ? "unlocked" : "locked"}
             </li>
           ))}
-          {badges.includes("champion-crown") ? (
+          {crowns.daily ? (
+            <li className="flex items-center gap-1.5 rounded-sm border border-signal/50 bg-signal/10 px-3 py-1.5 font-heading text-[10px] font-semibold uppercase tracking-wider text-signal">
+              <ChampionCrowns daily />
+              Daily Champion
+            </li>
+          ) : null}
+          {!crowns.daily && badges.includes("champion-crown") ? (
             <li className="rounded-sm border border-signal/50 bg-signal/10 px-3 py-1.5 font-heading text-[10px] font-semibold uppercase tracking-wider text-signal">
-              Champion crown
+              Daily Champion unlocked
+            </li>
+          ) : null}
+          {crowns.overall ? (
+            <li className="flex items-center gap-1.5 rounded-sm border border-cyan/50 bg-cyan/10 px-3 py-1.5 font-heading text-[10px] font-semibold uppercase tracking-wider text-cyan">
+              <ChampionCrowns overall />
+              Overall Champion
             </li>
           ) : null}
         </ul>

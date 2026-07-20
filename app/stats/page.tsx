@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { fetchMyStats } from "@/lib/api/clack";
+import {
+  fetchDailyChampion,
+  fetchLeaderboard,
+  fetchMyStats,
+} from "@/lib/api/clack";
 import { useSession } from "@/lib/auth/client";
 import { ButtonLink } from "@/components/ui/ButtonLink";
+import { ChampionCrowns } from "@/components/ui/ChampionCrown";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PageShell } from "@/components/ui/PageShell";
 import { RaceChrome } from "@/components/race/RaceChrome";
@@ -16,10 +21,23 @@ export default function StatsPage() {
   const { data: session, isPending } = useSession();
   const [res, setRes] = useState<StatsData | null>(null);
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const [crowns, setCrowns] = useState({ daily: false, overall: false });
 
   useEffect(() => {
     if (!session?.user) return;
     void fetchMyStats().then(setRes);
+    const userId = session.user.id;
+    void Promise.all([fetchDailyChampion(), fetchLeaderboard("all_time")]).then(
+      ([champ, board]) => {
+        setCrowns({
+          daily: champ.ok && champ.data.champion?.userId === userId,
+          overall:
+            board.ok &&
+            board.data.entries[0]?.userId === userId &&
+            board.data.entries[0].rank === 1,
+        });
+      },
+    );
   }, [session?.user]);
 
   const heatmapTop = useMemo(() => {
@@ -67,13 +85,23 @@ export default function StatsPage() {
   const { elo, series, personalBests } = res.data;
   const chart = series.slice(-24);
   const maxWpm = Math.max(1, ...chart.map((s) => s.wpm));
+  const peakWpm = Math.max(0, ...series.map((s) => s.wpm));
   const hover = hoverIdx != null ? chart[hoverIdx] : null;
+  const ratingHint =
+    elo.racesCounted < 20
+      ? `From wins/losses vs signed-in racers. Moves more while you’re new (${elo.racesCounted}/20).`
+      : "From wins/losses vs signed-in racers. Settles more slowly after 20 races.";
 
   return (
     <PageShell centered logoHref="/play" headerRight={<RaceChrome />}>
       <Eyebrow>Personal stats</Eyebrow>
-      <h1 className="mt-3 font-heading text-4xl font-bold uppercase tracking-wide text-chalk sm:text-5xl">
+      <h1 className="mt-3 flex flex-wrap items-center gap-2 font-heading text-4xl font-bold uppercase tracking-wide text-chalk sm:text-5xl">
         Your garage
+        <ChampionCrowns
+          daily={crowns.daily}
+          overall={crowns.overall}
+          size="md"
+        />
       </h1>
       <p className="mt-2 text-sm text-chalk-muted">
         Trends, personal bests, and rating — not a vanity dashboard.
@@ -84,6 +112,7 @@ export default function StatsPage() {
           label="Rating"
           value={String(Math.round(elo.rating))}
           accent="cyan"
+          hint={ratingHint}
         />
         <StatBlock
           label="Rated races"
@@ -91,15 +120,10 @@ export default function StatsPage() {
           hint="Human vs human only — CPU doesn’t count"
         />
         <StatBlock
-          label="Rating stage"
-          value={
-            elo.kFactorTier === "provisional" ? "Provisional" : "Established"
-          }
-          hint={
-            elo.kFactorTier === "provisional"
-              ? "First 20 rated races — rating moves faster"
-              : "20+ rated races — rating moves slower"
-          }
+          label="Peak WPM"
+          value={peakWpm > 0 ? String(Math.round(peakWpm)) : "—"}
+          accent="signal"
+          hint="Best verified finish across all modes"
         />
       </dl>
 
@@ -171,13 +195,14 @@ export default function StatsPage() {
           Personal bests
         </h2>
         <p className="mt-1 text-xs text-chalk-muted">
-          Race CPU only — used for ghost racing. Multiplayer peaks show in the
-          chart above.
+          Highest verified WPM per difficulty (any mode) — not an average.
+          Powers ghost racing. Peak WPM above is your single best across all
+          difficulties.
         </p>
         <ul className="mt-4 space-y-2">
           {personalBests.length === 0 ? (
             <li className="text-sm text-chalk-muted">
-              Finish a Race CPU run to set a PB (powers ghost racing).
+              Finish a verified race to set a PB (powers ghost racing).
             </li>
           ) : (
             personalBests.map((pb) => (
