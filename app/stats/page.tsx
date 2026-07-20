@@ -8,12 +8,14 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PageShell } from "@/components/ui/PageShell";
 import { RaceChrome } from "@/components/race/RaceChrome";
 import { StatBlock } from "@/components/ui/StatBlock";
+import { cn } from "@/lib/utils/cn";
 
 type StatsData = Awaited<ReturnType<typeof fetchMyStats>>;
 
 export default function StatsPage() {
   const { data: session, isPending } = useSession();
   const [res, setRes] = useState<StatsData | null>(null);
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 
   useEffect(() => {
     if (!session?.user) return;
@@ -63,7 +65,9 @@ export default function StatsPage() {
   }
 
   const { elo, series, personalBests } = res.data;
-  const maxWpm = Math.max(1, ...series.map((s) => s.wpm));
+  const chart = series.slice(-24);
+  const maxWpm = Math.max(1, ...chart.map((s) => s.wpm));
+  const hover = hoverIdx != null ? chart[hoverIdx] : null;
 
   return (
     <PageShell centered logoHref="/play" headerRight={<RaceChrome />}>
@@ -89,21 +93,67 @@ export default function StatsPage() {
       </dl>
 
       <section className="mt-12 w-full max-w-xl">
-        <h2 className="font-heading text-xs font-semibold uppercase tracking-[0.2em] text-chalk-muted">
-          WPM over time
-        </h2>
-        {series.length === 0 ? (
+        <div className="flex items-end justify-between gap-3">
+          <h2 className="font-heading text-xs font-semibold uppercase tracking-[0.2em] text-chalk-muted">
+            WPM over time
+          </h2>
+          {chart.length > 0 ? (
+            <p className="font-mono text-[10px] text-chalk-muted">
+              Scale 0–{Math.round(maxWpm)} (your peak in this window)
+            </p>
+          ) : null}
+        </div>
+        {chart.length === 0 ? (
           <p className="mt-3 text-sm text-chalk-muted">No finished races yet.</p>
         ) : (
-          <div className="mt-4 flex h-28 items-end gap-1">
-            {series.slice(-24).map((s, i) => (
+          <div className="relative mt-4">
+            <div
+              className="flex h-28 items-end gap-1"
+              onMouseLeave={() => setHoverIdx(null)}
+            >
+              {chart.map((s, i) => {
+                const pct = (s.wpm / maxWpm) * 100;
+                return (
+                  <button
+                    key={`${s.at}-${i}`}
+                    type="button"
+                    className={cn(
+                      "relative flex-1 rounded-sm transition-opacity",
+                      hoverIdx === i ? "bg-cyan" : "bg-cyan/70 hover:bg-cyan/90",
+                    )}
+                    style={{ height: `${Math.max(pct, 4)}%` }}
+                    aria-label={`${Math.round(s.wpm)} WPM, ${Math.round(s.accuracy)}% accuracy`}
+                    onMouseEnter={() => setHoverIdx(i)}
+                    onFocus={() => setHoverIdx(i)}
+                  />
+                );
+              })}
+            </div>
+            {hover ? (
               <div
-                key={`${s.at}-${i}`}
-                className="flex-1 rounded-sm bg-cyan/70"
-                style={{ height: `${(s.wpm / maxWpm) * 100}%` }}
-                title={`${Math.round(s.wpm)} WPM · ${Math.round(s.accuracy)}%`}
-              />
-            ))}
+                className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 w-max -translate-x-1/2 rounded-sm border border-lane bg-asphalt-raised px-3 py-2 text-left shadow-lg"
+                role="tooltip"
+              >
+                <p className="font-mono text-sm text-cyan">
+                  {Math.round(hover.wpm)} WPM
+                </p>
+                <p className="mt-0.5 text-xs text-chalk-muted">
+                  {Math.round(hover.accuracy)}% accuracy
+                </p>
+                <p className="mt-0.5 font-mono text-[10px] text-chalk-muted">
+                  {new Date(hover.at).toLocaleString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+                <p className="mt-1 text-[10px] text-chalk-muted">
+                  Bar height vs your best ({Math.round(maxWpm)} WPM) in last{" "}
+                  {chart.length} runs
+                </p>
+              </div>
+            ) : null}
           </div>
         )}
       </section>

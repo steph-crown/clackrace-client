@@ -218,8 +218,9 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
       setPhase((p) => {
         if (snap.status === "ended") return "ended";
         if (p === "waiting_race" && snap.status === "waiting") return "lobby";
-        if (snap.status === "waiting" && (p === "results" || p === "racing"))
-          return "lobby";
+        // Keep results screen after race; session goes back to waiting for refill.
+        // Only leave racing → lobby if we never got results (abort / disconnect).
+        if (snap.status === "waiting" && p === "racing") return "lobby";
         return p;
       });
     };

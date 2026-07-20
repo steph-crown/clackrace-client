@@ -133,7 +133,7 @@ export function LobbyScreen({
         </p>
       ) : null}
 
-      {(phase === "lobby" || isQuick) && (isQuick || !isCreator) ? (
+      {(phase === "lobby") && (isQuick || !isCreator) ? (
         <Button
           type="button"
           variant="secondary"
@@ -202,13 +202,16 @@ export function LobbyScreen({
 
       {phase === "results" ? <SignUpPrompt /> : null}
 
-      <div className="mt-10">
-        <RacerList members={members} memberId={memberId} />
-      </div>
-
-      <div className="mt-10">
-        <SessionLeaderboard entries={leaderboard} memberId={memberId} />
-      </div>
+      {phase !== "results" ? (
+        <>
+          <div className="mt-10">
+            <RacerList members={members} memberId={memberId} />
+          </div>
+          <div className="mt-10">
+            <SessionLeaderboard entries={leaderboard} memberId={memberId} />
+          </div>
+        </>
+      ) : null}
 
       {isQuick ? (
         <div className="mt-10 flex flex-wrap gap-3">
@@ -217,7 +220,13 @@ export function LobbyScreen({
             onClick={onReady}
             disabled={activeCount < 2 || youReady}
           >
-            {youReady ? "Ready" : "Ready"}
+            {phase === "results"
+              ? youReady
+                ? "Ready — waiting…"
+                : "Race again"
+              : youReady
+                ? "Ready"
+                : "Ready"}
           </Button>
           {phase === "results" && youResult?.finished ? (
             <ShareResultButton
@@ -228,6 +237,9 @@ export function LobbyScreen({
               mode="Quick Race"
             />
           ) : null}
+          <Button type="button" variant="ghost" onClick={onLeave}>
+            Leave
+          </Button>
           {activeCount < 2 ? (
             <p className="w-full text-sm text-chalk-muted">
               Waiting for at least one more racer…
