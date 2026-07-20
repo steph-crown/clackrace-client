@@ -65,7 +65,7 @@ export default function SignInPage() {
           {mode === "signin" ? "Sign in" : "Sign up"}
         </h1>
         <p className="mt-2 text-sm text-chalk-muted">
-          Guests can still Race CPU and Public Multiplayer. Accounts unlock
+          Guests can still Race CPU, Open Race, and Quick Race. Accounts unlock
           streaks, boards, and Challenge a Friend.
         </p>
 

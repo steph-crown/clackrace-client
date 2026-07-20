@@ -17,7 +17,7 @@ export default function ModeSelectPage() {
   const [creating, setCreating] = useState(false);
   const signedIn = !!session?.user;
 
-  const startPublic = async () => {
+  const startOpenRace = async () => {
     setCreating(true);
     const created = await createPublicSession(getOrCreateGuestSessionToken());
     if (!created) {
@@ -45,11 +45,18 @@ export default function ModeSelectPage() {
           <ButtonLink href="/settings" variant="ghost" size="sm">
             Settings
           </ButtonLink>
+          {" · "}
+          <ButtonLink href="/stats" variant="ghost" size="sm">
+            Stats
+          </ButtonLink>
         </p>
       ) : (
         <p className="mt-2 text-sm text-chalk-muted">
           Racing as guest.{" "}
-          <a href="/signin" className="text-cyan underline-offset-2 hover:underline">
+          <a
+            href="/signin"
+            className="text-cyan underline-offset-2 hover:underline"
+          >
             Sign in
           </a>{" "}
           for streaks, boards, and Challenge.
@@ -61,17 +68,28 @@ export default function ModeSelectPage() {
           <ModeCard
             href="/play/solo"
             title="Race CPU"
-            description="Solo practice. Instant start."
+            description="Practice instantly against bots."
+            whoJoins="Just you"
             accent="cyan"
           />
         </li>
         <li>
           <ModeCard
-            title="Public Multiplayer"
-            description="Share a link. Anyone can join."
+            title="Open Race"
+            description="Host a race and share the link."
+            whoJoins="Anyone with the link"
             accent="magenta"
             busy={creating}
-            onClick={() => void startPublic()}
+            onClick={() => void startOpenRace()}
+          />
+        </li>
+        <li>
+          <ModeCard
+            href="/play/quick"
+            title="Quick Race"
+            description="Jump in with whoever’s online."
+            whoJoins="Random players"
+            accent="signal"
           />
         </li>
         <li>
@@ -79,14 +97,17 @@ export default function ModeSelectPage() {
             <ModeCard
               href="/challenge"
               title="Challenge a Friend"
-              description="Signed-in direct race."
-              accent="signal"
+              description="Invite someone by username or email."
+              whoJoins="Someone you know"
+              accent="cyan"
             />
           ) : (
             <ModeCard
               title="Challenge a Friend"
-              description="Sign in required for both players."
+              description="Invite someone by username or email."
+              whoJoins="Someone you know"
               disabled
+              disabledLabel="Sign in"
             />
           )}
         </li>

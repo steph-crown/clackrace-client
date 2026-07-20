@@ -31,9 +31,16 @@ type LobbyScreenProps = {
   results: MultiplayerRaceResult[];
   shareUrl: string;
   toast?: string | null;
-  visibility?: "public" | "challenge";
+  visibility?: "public" | "challenge" | "matchmade";
   rematch?: { requestedByMemberId: string } | null;
+  commit?: {
+    endsAt: number;
+    promptedByName: string;
+    readyMemberIds: string[];
+  } | null;
+  youReady?: boolean;
   onStartRace: () => void;
+  onReady?: () => void;
   onPlayAgain: () => void;
   onRematchRespond?: (accept: boolean) => void;
   onEndSession: () => void;
@@ -53,7 +60,10 @@ export function LobbyScreen({
   toast,
   visibility = "public",
   rematch = null,
+  commit = null,
+  youReady = false,
   onStartRace,
+  onReady,
   onPlayAgain,
   onRematchRespond,
   onEndSession,
@@ -61,22 +71,36 @@ export function LobbyScreen({
 }: LobbyScreenProps) {
   const youResult = results.find((r) => r.memberId === memberId);
   const isChallenge = visibility === "challenge";
+  const isQuick = visibility === "matchmade";
   const iRequestedRematch =
     !!rematch && rematch.requestedByMemberId === memberId;
   const theyRequestedRematch =
     !!rematch && rematch.requestedByMemberId !== memberId;
+  const activeCount = members.filter((m) => !m.disconnected && !m.pending).length;
+  const commitSeconds = commit
+    ? Math.max(0, Math.ceil((commit.endsAt - Date.now()) / 1000))
+    : null;
+
+  const modeChrome = isChallenge
+    ? "challenge"
+    : isQuick
+      ? "quick"
+      : "public";
 
   return (
     <PageShell
       centered
       logoHref="/play"
-      headerRight={
-        <RaceChrome currentMode={isChallenge ? "challenge" : "public"} />
-      }
+      headerRight={<RaceChrome currentMode={modeChrome} />}
     >
       {toast ? <Toast message={toast} /> : null}
       <Eyebrow>
-        {isChallenge ? "Direct Challenge" : "Race Code"}: {sessionId}
+        {isChallenge
+          ? "Direct Challenge"
+          : isQuick
+            ? "Quick Race"
+            : "Race Code"}
+        : {sessionId}
       </Eyebrow>
 
       {phase === "results" && youResult?.finished ? (
@@ -94,13 +118,21 @@ export function LobbyScreen({
         <span className="text-cyan">You</span>
       </p>
 
-      {!isChallenge ? (
+      {!isChallenge && !isQuick ? (
         <div className="mt-8">
           <InviteLinkCard shareUrl={shareUrl} />
         </div>
       ) : null}
 
-      {phase === "lobby" && !isCreator ? (
+      {isQuick && commit ? (
+        <p className="mt-6 rounded-sm border border-signal/40 bg-signal/10 px-4 py-3 text-sm text-chalk">
+          <span className="text-signal">{commit.promptedByName}</span> is ready —
+          race starts in{" "}
+          <span className="font-mono text-signal">{commitSeconds ?? 0}s</span>
+        </p>
+      ) : null}
+
+      {(phase === "lobby" || isQuick) && (isQuick || !isCreator) ? (
         <Button
           type="button"
           variant="secondary"
@@ -177,7 +209,22 @@ export function LobbyScreen({
         <SessionLeaderboard entries={leaderboard} memberId={memberId} />
       </div>
 
-      {isChallenge && phase === "results" ? (
+      {isQuick ? (
+        <div className="mt-10 flex flex-wrap gap-3">
+          <Button
+            type="button"
+            onClick={onReady}
+            disabled={activeCount < 2 || youReady}
+          >
+            {youReady ? "Ready" : "Ready"}
+          </Button>
+          {activeCount < 2 ? (
+            <p className="w-full text-sm text-chalk-muted">
+              Waiting for at least one more racer…
+            </p>
+          ) : null}
+        </div>
+      ) : isChallenge && phase === "results" ? (
         <div className="mt-10 flex flex-wrap gap-3">
           {theyRequestedRematch ? (
             <>

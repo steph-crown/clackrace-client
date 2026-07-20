@@ -27,7 +27,7 @@ export default function CreatePublicSessionPage() {
 
   return (
     <PageShell centered logoHref="/play">
-      <Eyebrow>Public Multiplayer</Eyebrow>
+      <Eyebrow>Open Race</Eyebrow>
       <h1 className="mt-3 font-heading text-4xl font-bold uppercase tracking-wide text-chalk sm:text-5xl">
         Open a race
       </h1>

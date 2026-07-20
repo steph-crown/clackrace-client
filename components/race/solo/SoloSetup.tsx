@@ -14,6 +14,9 @@ type SoloSetupProps = {
   onDifficultyChange: (d: CpuDifficulty) => void;
   onCpuCountChange: (n: number) => void;
   onStart: () => void;
+  onStartGhost?: () => void;
+  ghostAvailable?: boolean;
+  ghostBusy?: boolean;
 };
 
 export function SoloSetup({
@@ -22,6 +25,9 @@ export function SoloSetup({
   onDifficultyChange,
   onCpuCountChange,
   onStart,
+  onStartGhost,
+  ghostAvailable = false,
+  ghostBusy = false,
 }: SoloSetupProps) {
   return (
     <PageShell
@@ -75,17 +81,37 @@ export function SoloSetup({
           />
         </div>
 
-        <Button
-          type="button"
-          size="lg"
-          onClick={() => {
-            void raceAudio.ensureUnlocked();
-            onStart();
-          }}
-          className="sm:min-w-[220px]"
-        >
-          Start race
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button
+            type="button"
+            size="lg"
+            onClick={() => {
+              void raceAudio.ensureUnlocked();
+              onStart();
+            }}
+            className="sm:min-w-[220px]"
+          >
+            Start race
+          </Button>
+          {onStartGhost ? (
+            <Button
+              type="button"
+              size="lg"
+              variant="secondary"
+              disabled={!ghostAvailable || ghostBusy}
+              onClick={() => {
+                void raceAudio.ensureUnlocked();
+                onStartGhost();
+              }}
+            >
+              {ghostBusy
+                ? "Loading ghost…"
+                : ghostAvailable
+                  ? "Race your ghost"
+                  : "Ghost (need a PB)"}
+            </Button>
+          ) : null}
+        </div>
       </div>
     </PageShell>
   );

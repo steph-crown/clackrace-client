@@ -99,7 +99,7 @@ export async function claimGuestRuns(guestSessionToken: string) {
   });
 }
 
-export type LeaderboardScope = "all_time" | "daily" | "weekly";
+export type LeaderboardScope = "all_time" | "daily" | "weekly" | "rating";
 
 export async function fetchLeaderboard(scope: LeaderboardScope) {
   return clackFetch<{
@@ -179,4 +179,57 @@ export async function fetchSocketToken() {
 
 export function notificationsStreamUrl() {
   return `${CLACK}/notifications/stream`;
+}
+
+export async function enqueueMatchmaking(guestSessionToken: string) {
+  return clackFetch<{
+    ticketId: string;
+    status: "searching" | "assigned";
+    sessionId: string | null;
+    expiresAt: number;
+  }>("/matchmaking/enqueue", {
+    method: "POST",
+    body: JSON.stringify({ guestSessionToken }),
+  });
+}
+
+export async function pollMatchmaking(ticketId: string) {
+  return clackFetch<{
+    status: "searching" | "assigned" | "timeout" | "gone";
+    sessionId: string | null;
+    expiresAt: number | null;
+  }>(`/matchmaking/tickets/${ticketId}`);
+}
+
+export async function cancelMatchmaking(ticketId: string) {
+  return clackFetch<{ ok: true }>(`/matchmaking/tickets/${ticketId}/cancel`, {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export async function fetchMyStats() {
+  return clackFetch<{
+    elo: { rating: number; racesCounted: number; kFactorTier: string };
+    series: { wpm: number; accuracy: number; at: string; mode: string }[];
+    personalBests: {
+      difficulty: string;
+      bestWpm: number;
+      bestAccuracy: number;
+      passageId: string;
+      achievedAt: string;
+    }[];
+    mistypeHeatmap: Record<string, number>;
+  }>("/stats/me");
+}
+
+export async function fetchGhost(difficulty: "easy" | "medium" | "hard") {
+  return clackFetch<{
+    difficulty: string;
+    bestWpm: number;
+    bestAccuracy: number;
+    passageId: string;
+    passageText: string;
+    strokes: { charIndex: number; timestampMs: number }[];
+  }>(`/stats/ghost?difficulty=${difficulty}`);
 }

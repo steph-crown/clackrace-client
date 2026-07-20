@@ -16,6 +16,8 @@ export type TypingState = {
   startedAtMs: number | null;
   finishedAtMs: number | null;
   keystrokes: KeystrokeEntry[];
+  /** Expected character → wrong press counts (heatmap). */
+  mistypeCounts: Record<string, number>;
 };
 
 export function createTypingState(passage: string): TypingState {
@@ -28,6 +30,7 @@ export function createTypingState(passage: string): TypingState {
     startedAtMs: null,
     finishedAtMs: null,
     keystrokes: [],
+    mistypeCounts: {},
   };
 }
 
@@ -62,6 +65,15 @@ export function applyKey(
   const startedAtMs = state.startedAtMs ?? (isCorrect ? nowMs : state.startedAtMs);
   const correctIndex = correctPrefixLen(state.passage, nextTyped);
 
+  let mistypeCounts = state.mistypeCounts;
+  if (!isCorrect && expected !== undefined) {
+    const label = expected === " " ? "␣" : expected;
+    mistypeCounts = {
+      ...mistypeCounts,
+      [label]: (mistypeCounts[label] ?? 0) + 1,
+    };
+  }
+
   let keystrokes = state.keystrokes;
   if (isCorrect && correctIndex > state.correctIndex && startedAtMs != null) {
     keystrokes = [
@@ -88,6 +100,7 @@ export function applyKey(
     startedAtMs: startedAtMs ?? state.startedAtMs,
     finishedAtMs,
     keystrokes,
+    mistypeCounts,
   };
 }
 

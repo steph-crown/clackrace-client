@@ -52,10 +52,19 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
   const [liveAccuracy, setLiveAccuracy] = useState(100);
   const [results, setResults] = useState<MultiplayerRaceResult[]>([]);
   const [localFinished, setLocalFinished] = useState(false);
-  const [visibility, setVisibility] = useState<"public" | "challenge">("public");
+  const [visibility, setVisibility] = useState<
+    "public" | "challenge" | "matchmade"
+  >("public");
   const [rematch, setRematch] = useState<{
     requestedByMemberId: string;
   } | null>(null);
+  const [commit, setCommit] = useState<{
+    endsAt: number;
+    promptedByName: string;
+    readyMemberIds: string[];
+  } | null>(null);
+  const [youReady, setYouReady] = useState(false);
+  const [, setCommitTick] = useState(0);
 
   const targetProgress = useRef<Record<string, number>>({});
   const displayProgress = useRef<Record<string, number>>({});
@@ -72,6 +81,11 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
   useEffect(() => {
     typingRef.current = typing;
   }, [typing]);
+  useEffect(() => {
+    if (!commit) return;
+    const id = window.setInterval(() => setCommitTick((n) => n + 1), 250);
+    return () => clearInterval(id);
+  }, [commit]);
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -130,7 +144,13 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
           snapshot?: {
             members: SessionMember[];
             leaderboard: SessionLeaderboardEntry[];
-            visibility?: "public" | "challenge";
+            visibility?: "public" | "challenge" | "matchmade";
+            commit?: {
+              endsAt: number;
+              promptedByName: string;
+              readyMemberIds: string[];
+            } | null;
+            you?: { ready?: boolean };
             rematch?: { requestedByMemberId: string } | null;
           };
         }) => {
@@ -159,6 +179,8 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
               setVisibility(res.snapshot.visibility);
             }
             setRematch(res.snapshot.rematch ?? null);
+            setCommit(res.snapshot.commit ?? null);
+            setYouReady(!!res.snapshot.you?.ready);
           }
           setPhase(res.pending ? "waiting_race" : "lobby");
         },
@@ -169,21 +191,35 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
       members: SessionMember[];
       leaderboard: SessionLeaderboardEntry[];
       status: string;
-      visibility?: "public" | "challenge";
+      visibility?: "public" | "challenge" | "matchmade";
+      commit?: {
+        endsAt: number;
+        promptedByName: string;
+        readyMemberIds: string[];
+      } | null;
       rematch?: { requestedByMemberId: string } | null;
-      you: { pending: boolean; isCreator: boolean; displayName: string } | null;
+      you: {
+        pending: boolean;
+        isCreator: boolean;
+        displayName: string;
+        ready?: boolean;
+      } | null;
     }) => {
       setMembers(snap.members);
       setLeaderboard(snap.leaderboard);
       if (snap.visibility) setVisibility(snap.visibility);
       setRematch(snap.rematch ?? null);
+      setCommit(snap.commit ?? null);
       if (snap.you) {
         setIsCreator(snap.you.isCreator);
         setDisplayName(snap.you.displayName);
+        setYouReady(!!snap.you.ready);
       }
       setPhase((p) => {
         if (snap.status === "ended") return "ended";
         if (p === "waiting_race" && snap.status === "waiting") return "lobby";
+        if (snap.status === "waiting" && (p === "results" || p === "racing"))
+          return "lobby";
         return p;
       });
     };
@@ -344,6 +380,7 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
         mistakes: state.mistakes,
         keystrokes: state.keystrokes,
         durationMs: Math.round(durationMs),
+        mistypeCounts: state.mistypeCounts,
       },
       (res: { ok?: boolean } | undefined) => {
         if (!res?.ok) finishedSent.current = false;
@@ -418,7 +455,10 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
         toast={toast}
         visibility={visibility}
         rematch={rematch}
+        commit={commit}
+        youReady={youReady}
         onStartRace={() => getSocket().emit("race:start")}
+        onReady={() => getSocket().emit("session:ready")}
         onPlayAgain={() => getSocket().emit("session:playAgain")}
         onRematchRespond={(accept) =>
           getSocket().emit("session:rematchRespond", { accept })

@@ -11,10 +11,12 @@ export type SoloResultPayload = {
   finalAccuracy: number;
   placement: number;
   participantCount: number;
-  cpuDifficulty: "easy" | "medium" | "hard" | "expert";
-  cpuCount: number;
+  cpuDifficulty?: "easy" | "medium" | "hard" | "expert";
+  cpuCount?: number;
+  mode?: "solo_cpu" | "solo_ghost";
   durationMs: number;
   mistakes: number;
+  mistypeCounts?: Record<string, number>;
   keystrokes: { charIndex: number; timestampMs: number }[];
   /** Client-reported passage text length for server cross-check. */
   passageLength: number;

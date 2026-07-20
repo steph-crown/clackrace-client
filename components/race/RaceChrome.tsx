@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils/cn";
 
 type RaceChromeProps = {
   /** Highlight current mode in the menu. */
-  currentMode?: "solo" | "public" | "challenge" | null;
+  currentMode?: "solo" | "public" | "quick" | "challenge" | null;
   /** Compact trigger for live race (overflow only). */
   compact?: boolean;
   className?: string;
@@ -97,7 +97,14 @@ export function RaceChrome({
             active={currentMode === "public"}
             onNavigate={() => setOpen(false)}
           >
-            Public Multiplayer
+            Open Race
+          </MenuLink>
+          <MenuLink
+            href="/play/quick"
+            active={currentMode === "quick"}
+            onNavigate={() => setOpen(false)}
+          >
+            Quick Race
           </MenuLink>
           <MenuLink
             href="/challenge"
@@ -109,6 +116,9 @@ export function RaceChrome({
           <div className="my-2 border-t border-lane/60" />
           <MenuLink href="/leaderboard" onNavigate={() => setOpen(false)}>
             Leaderboard
+          </MenuLink>
+          <MenuLink href="/stats" onNavigate={() => setOpen(false)}>
+            Stats
           </MenuLink>
           <MenuLink href="/settings" onNavigate={() => setOpen(false)}>
             Settings

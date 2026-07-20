@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils/cn";
 type ModeCardProps = {
   title: string;
   description: string;
+  /** Who joins micro-label (PRD §6.1 card contract). */
+  whoJoins?: string;
   actionLabel?: string;
   accent?: "cyan" | "magenta" | "signal";
   disabled?: boolean;
@@ -28,6 +30,7 @@ const accentText = {
 export function ModeCard({
   title,
   description,
+  whoJoins,
   actionLabel = "Go →",
   accent = "cyan",
   disabled = false,
@@ -43,6 +46,11 @@ export function ModeCard({
           {title}
         </h2>
         <p className="mt-1 text-sm text-chalk-muted">{description}</p>
+        {whoJoins ? (
+          <p className="mt-2 font-heading text-[10px] font-semibold uppercase tracking-[0.18em] text-chalk-muted/80">
+            {whoJoins}
+          </p>
+        ) : null}
       </div>
       <span
         className={cn(

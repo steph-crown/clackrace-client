@@ -17,6 +17,7 @@ const SCOPES: { id: LeaderboardScope; label: string }[] = [
   { id: "all_time", label: "All-time" },
   { id: "daily", label: "Daily" },
   { id: "weekly", label: "Weekly" },
+  { id: "rating", label: "Rating" },
 ];
 
 type Entry = {
@@ -135,7 +136,9 @@ export default function LeaderboardPage() {
                 </span>
               </div>
               <span className="font-mono text-sm text-cyan">
-                {Math.round(e.bestWpm)} WPM
+                {scope === "rating"
+                  ? `${Math.round(e.bestWpm)} Elo`
+                  : `${Math.round(e.bestWpm)} WPM`}
               </span>
             </li>
           ))

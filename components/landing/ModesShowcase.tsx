@@ -4,23 +4,30 @@ const MODES = [
   {
     href: "/play/solo",
     title: "Race CPU",
-    tag: "Solo · Instant",
-    copy: "Pick difficulty, fill the grid with bots, go. No waiting on anyone.",
+    tag: "Just you",
+    copy: "Practice instantly against bots. Pick difficulty and go.",
     accent: "cyan" as const,
   },
   {
     href: "/play/public",
-    title: "Public Multiplayer",
-    tag: "Share a link",
-    copy: "Open a race, drop the link in chat. Anyone with it can join — guests welcome.",
+    title: "Open Race",
+    tag: "Anyone with the link",
+    copy: "Host a race and share the link. Guests welcome.",
     accent: "magenta" as const,
+  },
+  {
+    href: "/play/quick",
+    title: "Quick Race",
+    tag: "Random players",
+    copy: "Jump in with whoever’s online. No link to share.",
+    accent: "signal" as const,
   },
   {
     href: "/play",
     title: "Challenge a Friend",
-    tag: "Signed in",
-    copy: "Direct invite by username or email. Private race. Just the two of you.",
-    accent: "signal" as const,
+    tag: "Someone you know",
+    copy: "Invite by username or email. Private race for two.",
+    accent: "cyan" as const,
   },
 ];
 
@@ -50,7 +57,7 @@ export function ModesShowcase() {
           Arcade character-select energy — pick a lane and start typing.
         </p>
 
-        <ul className="mt-12 grid gap-4 md:grid-cols-3">
+        <ul className="mt-12 grid gap-4 sm:grid-cols-2">
           {MODES.map((mode) => (
             <li key={mode.title} data-reveal>
               <Link

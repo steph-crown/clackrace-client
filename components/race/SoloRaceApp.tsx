@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { fetchMe } from "@/lib/api/clack";
+import { fetchGhost, fetchMe } from "@/lib/api/clack";
 import { fetchPassages, submitSoloResult } from "@/lib/api/client";
+import { ghostProgressAt } from "@/lib/race/ghost";
+import { useSession } from "@/lib/auth/client";
+import type { KeystrokeEntry } from "@/lib/typing/engine";
 import {
   createCpuRacers,
   tickCpu,
@@ -36,6 +39,7 @@ import { SoloSetup } from "./solo/SoloSetup";
 type Phase = "setup" | "countdown" | "racing" | "results";
 
 export function SoloRaceApp() {
+  const { data: authSession } = useSession();
   const [phase, setPhase] = useState<Phase>("setup");
   const [difficulty, setDifficulty] = useState<CpuDifficulty>("medium");
   const [cpuCount, setCpuCount] = useState(3);
@@ -49,6 +53,10 @@ export function SoloRaceApp() {
   const [liveAccuracy, setLiveAccuracy] = useState(100);
   const [results, setResults] = useState<RacerResult[]>([]);
   const [submitted, setSubmitted] = useState<boolean | null>(null);
+  const [ghostMode, setGhostMode] = useState(false);
+  const [ghostProgress, setGhostProgress] = useState(0);
+  const [ghostAvailable, setGhostAvailable] = useState(false);
+  const [ghostBusy, setGhostBusy] = useState(false);
 
   const cpusRef = useRef<CpuRacer[]>([]);
   const typingRef = useRef<TypingState | null>(null);
@@ -56,6 +64,8 @@ export function SoloRaceApp() {
   const rafRef = useRef<number | null>(null);
   const lastFrameRef = useRef<number>(0);
   const countdownIdRef = useRef<number | null>(null);
+  const ghostStrokesRef = useRef<KeystrokeEntry[]>([]);
+  const ghostModeRef = useRef(false);
 
   useEffect(() => {
     void fetchPassages().then(setPassages);
@@ -63,6 +73,19 @@ export function SoloRaceApp() {
       if (res.ok) setPlayerCarColor(res.data.user.carColor);
     });
   }, []);
+
+  useEffect(() => {
+    ghostModeRef.current = ghostMode;
+  }, [ghostMode]);
+
+  useEffect(() => {
+    if (!authSession?.user) {
+      setGhostAvailable(false);
+      return;
+    }
+    const d = difficulty === "expert" ? "hard" : difficulty;
+    void fetchGhost(d).then((res) => setGhostAvailable(res.ok));
+  }, [authSession?.user, difficulty]);
 
   useEffect(() => {
     typingRef.current = typing;
@@ -82,6 +105,18 @@ export function SoloRaceApp() {
       accentColor: "#e8e6e1",
       isYou: true,
     };
+    if (ghostMode) {
+      return [
+        player,
+        {
+          id: "ghost",
+          label: "Ghost",
+          progress: ghostProgress,
+          bodyColor: "#6b7280",
+          accentColor: "#e8e6e1",
+        },
+      ];
+    }
     const bots: TrackRacer[] = cpus.map((c) => ({
       id: c.id,
       label: c.name.replace("CPU ", ""),
@@ -90,7 +125,7 @@ export function SoloRaceApp() {
       accentColor: c.accentColor,
     }));
     return [player, ...bots];
-  }, [typing, cpus, passage, playerCarColor]);
+  }, [typing, cpus, passage, playerCarColor, ghostMode, ghostProgress]);
 
   const finishRace = useCallback(
     (finalTyping: TypingState, finalCpus: CpuRacer[]) => {
@@ -144,8 +179,10 @@ export function SoloRaceApp() {
         participantCount: ranked.length,
         cpuDifficulty: difficulty,
         cpuCount: finalCpus.length,
+        mode: ghostModeRef.current ? "solo_ghost" : "solo_cpu",
         durationMs: Math.round(durationMs),
         mistakes: finalTyping.mistakes,
+        mistypeCounts: finalTyping.mistypeCounts,
         keystrokes: finalTyping.keystrokes,
         passageLength: passage.text.length,
       }).then((res) => setSubmitted(res.ok));
@@ -164,11 +201,18 @@ export function SoloRaceApp() {
       const elapsed = now - start;
       const passageLen = typingRef.current?.passage.length ?? 0;
 
-      const nextCpus = cpusRef.current.map((c) =>
-        tickCpu(c, passageLen, dt, elapsed),
-      );
-      cpusRef.current = nextCpus;
-      setCpus(nextCpus);
+      let nextCpus = cpusRef.current;
+      if (!ghostModeRef.current) {
+        nextCpus = cpusRef.current.map((c) =>
+          tickCpu(c, passageLen, dt, elapsed),
+        );
+        cpusRef.current = nextCpus;
+        setCpus(nextCpus);
+      } else {
+        setGhostProgress(
+          ghostProgressAt(ghostStrokesRef.current, passageLen, elapsed),
+        );
+      }
 
       const t = typingRef.current;
       if (t?.startedAtMs != null) {
@@ -190,6 +234,11 @@ export function SoloRaceApp() {
   }, [finishRace]);
 
   const beginCountdown = useCallback(() => {
+    setGhostMode(false);
+    ghostModeRef.current = false;
+    ghostStrokesRef.current = [];
+    setGhostProgress(0);
+
     const pool = passages.length > 0 ? passages : undefined;
     const passageDifficulty: PassageDifficulty =
       difficulty === "expert" ? "hard" : difficulty;
@@ -237,6 +286,69 @@ export function SoloRaceApp() {
       else raceAudio.play("countdown");
     }, 700);
   }, [passages, difficulty, cpuCount, startLoop]);
+
+  const beginGhostCountdown = useCallback(async () => {
+    const d = difficulty === "expert" ? "hard" : difficulty;
+    setGhostBusy(true);
+    const res = await fetchGhost(d);
+    setGhostBusy(false);
+    if (!res.ok) {
+      setGhostAvailable(false);
+      return;
+    }
+
+    setGhostMode(true);
+    ghostModeRef.current = true;
+    ghostStrokesRef.current = res.data.strokes;
+    setGhostProgress(0);
+
+    const picked: Passage = {
+      id: res.data.passageId,
+      text: res.data.passageText,
+      difficulty: d,
+      source: "official",
+    };
+    const state = createTypingState(picked.text);
+    setPassage(picked);
+    setTyping(state);
+    typingRef.current = state;
+    setCpus([]);
+    cpusRef.current = [];
+    setSubmitted(null);
+    setResults([]);
+    setLiveWpm(0);
+    setLiveAccuracy(100);
+    setPhase("countdown");
+
+    if (countdownIdRef.current != null) {
+      window.clearInterval(countdownIdRef.current);
+      countdownIdRef.current = null;
+    }
+
+    const steps: Array<number | "GO"> = [3, 2, 1, "GO"];
+    let i = 0;
+    setCountdown(steps[0]!);
+    raceAudio.play("countdown");
+
+    countdownIdRef.current = window.setInterval(() => {
+      i += 1;
+      if (i >= steps.length) {
+        if (countdownIdRef.current != null) {
+          window.clearInterval(countdownIdRef.current);
+          countdownIdRef.current = null;
+        }
+        setCountdown(null);
+        setPhase("racing");
+        raceAudio.play("raceBed");
+        startLoop();
+        return;
+      }
+      const step = steps[i]!;
+      setCountdown(step);
+      if (step === "GO") raceAudio.play("go");
+      else raceAudio.play("countdown");
+    }, 700);
+  }, [difficulty, startLoop]);
 
   useEffect(() => {
     return () => {
@@ -301,6 +413,11 @@ export function SoloRaceApp() {
         onDifficultyChange={setDifficulty}
         onCpuCountChange={setCpuCount}
         onStart={beginCountdown}
+        onStartGhost={
+          authSession?.user ? () => void beginGhostCountdown() : undefined
+        }
+        ghostAvailable={ghostAvailable}
+        ghostBusy={ghostBusy}
       />
     );
   }
