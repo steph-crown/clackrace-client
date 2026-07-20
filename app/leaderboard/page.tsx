@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSession } from "@/lib/auth/client";
 import {
   fetchDailyChampion,
   fetchLeaderboard,
@@ -36,6 +37,8 @@ type Champion = {
 };
 
 export default function LeaderboardPage() {
+  const { data: session } = useSession();
+  const signedIn = !!session?.user;
   const [scope, setScope] = useState<LeaderboardScope>("all_time");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [champion, setChampion] = useState<Champion | null>(null);
@@ -115,7 +118,9 @@ export default function LeaderboardPage() {
           <li className="text-sm text-chalk-muted">Loading…</li>
         ) : entries.length === 0 ? (
           <li className="text-sm text-chalk-muted">
-            No scores yet. Sign in and race to claim a spot.
+            {signedIn
+              ? "No scores yet. Finish a race to claim a spot."
+              : "No scores yet. Sign in and race to claim a spot."}
           </li>
         ) : (
           entries.map((e) => (
@@ -147,9 +152,15 @@ export default function LeaderboardPage() {
 
       <div className="mt-10 flex flex-wrap gap-3">
         <ButtonLink href="/play">Modes</ButtonLink>
-        <ButtonLink href="/signin" variant="secondary">
-          Sign in
-        </ButtonLink>
+        {signedIn ? (
+          <ButtonLink href="/stats" variant="secondary">
+            Your stats
+          </ButtonLink>
+        ) : (
+          <ButtonLink href="/signin" variant="secondary">
+            Sign in
+          </ButtonLink>
+        )}
       </div>
     </PageShell>
   );

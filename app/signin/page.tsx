@@ -1,9 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { claimGuestSessionIfPresent } from "@/lib/auth/claim";
-import { signIn, signUp } from "@/lib/auth/client";
+import { signIn, signUp, useSession } from "@/lib/auth/client";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -11,14 +11,28 @@ import { PageShell } from "@/components/ui/PageShell";
 
 type Mode = "signin" | "signup";
 
-export default function SignInPage() {
+function safeNext(raw: string | null): string {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/play";
+  return raw;
+}
+
+function SignInInner() {
   const router = useRouter();
+  const search = useSearchParams();
+  const nextPath = safeNext(search.get("next"));
+  const { data: session, isPending } = useSession();
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!isPending && session?.user) {
+      router.replace(nextPath);
+    }
+  }, [isPending, session?.user, router, nextPath]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +63,7 @@ export default function SignInPage() {
         }
       }
       await claimGuestSessionIfPresent();
-      router.push("/play");
+      router.push(nextPath);
       router.refresh();
     } catch {
       setError("Something went wrong. Try again.");
@@ -57,102 +71,122 @@ export default function SignInPage() {
     }
   };
 
+  if (isPending || session?.user) {
+    return (
+      <p className="mt-8 text-sm text-chalk-muted">
+        {session?.user ? "Already signed in — redirecting…" : "Loading…"}
+      </p>
+    );
+  }
+
+  return (
+    <>
+      <Eyebrow>{mode === "signin" ? "Welcome back" : "Create account"}</Eyebrow>
+      <h1 className="mt-3 font-heading text-3xl font-bold uppercase tracking-wide text-chalk sm:text-4xl">
+        {mode === "signin" ? "Sign in" : "Sign up"}
+      </h1>
+      <p className="mt-2 text-sm text-chalk-muted">
+        Guests can still Race CPU, Open Race, and Quick Race. Accounts unlock
+        streaks, boards, and Challenge a Friend.
+      </p>
+
+      <form onSubmit={submit} className="mt-8 space-y-4">
+        {mode === "signup" ? (
+          <Field
+            label="Username"
+            value={username}
+            onChange={setUsername}
+            autoComplete="username"
+            required
+            minLength={3}
+            maxLength={24}
+          />
+        ) : null}
+        <Field
+          label="Email"
+          type="email"
+          value={email}
+          onChange={setEmail}
+          autoComplete="email"
+          required
+        />
+        <Field
+          label="Password"
+          type="password"
+          value={password}
+          onChange={setPassword}
+          autoComplete={
+            mode === "signin" ? "current-password" : "new-password"
+          }
+          required
+          minLength={8}
+        />
+
+        {error ? (
+          <p className="text-sm text-magenta" role="alert">
+            {error}
+          </p>
+        ) : null}
+
+        <Button type="submit" fullWidth disabled={busy}>
+          {busy
+            ? "Working…"
+            : mode === "signin"
+              ? "Sign in"
+              : "Create account"}
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-chalk-muted">
+        {mode === "signin" ? (
+          <>
+            No account?{" "}
+            <button
+              type="button"
+              className="text-cyan underline-offset-2 hover:underline"
+              onClick={() => {
+                setMode("signup");
+                setError(null);
+              }}
+            >
+              Sign up
+            </button>
+          </>
+        ) : (
+          <>
+            Already racing?{" "}
+            <button
+              type="button"
+              className="text-cyan underline-offset-2 hover:underline"
+              onClick={() => {
+                setMode("signin");
+                setError(null);
+              }}
+            >
+              Sign in
+            </button>
+          </>
+        )}
+      </p>
+
+      <div className="mt-8 flex flex-wrap justify-center gap-3">
+        <ButtonLink href="/play" variant="secondary">
+          Play as guest
+        </ButtonLink>
+      </div>
+    </>
+  );
+}
+
+export default function SignInPage() {
   return (
     <PageShell centered logoHref="/">
       <div className="mx-auto w-full max-w-md">
-        <Eyebrow>{mode === "signin" ? "Welcome back" : "Create account"}</Eyebrow>
-        <h1 className="mt-3 font-heading text-3xl font-bold uppercase tracking-wide text-chalk sm:text-4xl">
-          {mode === "signin" ? "Sign in" : "Sign up"}
-        </h1>
-        <p className="mt-2 text-sm text-chalk-muted">
-          Guests can still Race CPU, Open Race, and Quick Race. Accounts unlock
-          streaks, boards, and Challenge a Friend.
-        </p>
-
-        <form onSubmit={submit} className="mt-8 space-y-4">
-          {mode === "signup" ? (
-            <Field
-              label="Username"
-              value={username}
-              onChange={setUsername}
-              autoComplete="username"
-              required
-              minLength={3}
-              maxLength={24}
-            />
-          ) : null}
-          <Field
-            label="Email"
-            type="email"
-            value={email}
-            onChange={setEmail}
-            autoComplete="email"
-            required
-          />
-          <Field
-            label="Password"
-            type="password"
-            value={password}
-            onChange={setPassword}
-            autoComplete={
-              mode === "signin" ? "current-password" : "new-password"
-            }
-            required
-            minLength={8}
-          />
-
-          {error ? (
-            <p className="text-sm text-magenta" role="alert">
-              {error}
-            </p>
-          ) : null}
-
-          <Button type="submit" fullWidth disabled={busy}>
-            {busy
-              ? "Working…"
-              : mode === "signin"
-                ? "Sign in"
-                : "Create account"}
-          </Button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-chalk-muted">
-          {mode === "signin" ? (
-            <>
-              No account?{" "}
-              <button
-                type="button"
-                className="text-cyan underline-offset-2 hover:underline"
-                onClick={() => {
-                  setMode("signup");
-                  setError(null);
-                }}
-              >
-                Sign up
-              </button>
-            </>
-          ) : (
-            <>
-              Already racing?{" "}
-              <button
-                type="button"
-                className="text-cyan underline-offset-2 hover:underline"
-                onClick={() => {
-                  setMode("signin");
-                  setError(null);
-                }}
-              >
-                Sign in
-              </button>
-            </>
-          )}
-        </p>
-
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <ButtonLink href="/play" variant="secondary">
-            Play as guest
-          </ButtonLink>
-        </div>
+        <Suspense
+          fallback={<p className="text-sm text-chalk-muted">Loading…</p>}
+        >
+          <SignInInner />
+        </Suspense>
       </div>
     </PageShell>
   );

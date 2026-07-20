@@ -12,6 +12,7 @@ import { MedalBadge } from "@/components/race/results/MedalBadge";
 import { PlacementHeadline } from "@/components/race/results/PlacementHeadline";
 import { placeOrdinal, podiumTier } from "@/lib/race/placement";
 import { cn } from "@/lib/utils/cn";
+import { ShareResultButton } from "@/components/race/results/ShareResultActions";
 import { RacerList } from "./RacerList";
 import { SessionLeaderboard } from "./SessionLeaderboard";
 import type {
@@ -218,6 +219,15 @@ export function LobbyScreen({
           >
             {youReady ? "Ready" : "Ready"}
           </Button>
+          {phase === "results" && youResult?.finished ? (
+            <ShareResultButton
+              wpm={youResult.wpm}
+              accuracy={youResult.accuracy}
+              placement={youResult.placement}
+              name="You"
+              mode="Quick Race"
+            />
+          ) : null}
           {activeCount < 2 ? (
             <p className="w-full text-sm text-chalk-muted">
               Waiting for at least one more racer…
@@ -251,6 +261,15 @@ export function LobbyScreen({
               Request rematch
             </Button>
           )}
+          {youResult?.finished ? (
+            <ShareResultButton
+              wpm={youResult.wpm}
+              accuracy={youResult.accuracy}
+              placement={youResult.placement}
+              name="You"
+              mode="Challenge"
+            />
+          ) : null}
           {isCreator ? (
             <Button type="button" variant="secondary" onClick={onEndSession}>
               End session
@@ -268,6 +287,15 @@ export function LobbyScreen({
               Play again
             </Button>
           )}
+          {phase === "results" && youResult?.finished ? (
+            <ShareResultButton
+              wpm={youResult.wpm}
+              accuracy={youResult.accuracy}
+              placement={youResult.placement}
+              name="You"
+              mode="Open Race"
+            />
+          ) : null}
           <Button type="button" variant="secondary" onClick={onEndSession}>
             End session
           </Button>
@@ -277,9 +305,20 @@ export function LobbyScreen({
           Waiting for the host to start…
         </p>
       ) : (
-        <p className="mt-10 text-sm text-chalk-muted">
-          Waiting for the host to rematch…
-        </p>
+        <div className="mt-10 flex flex-wrap items-center gap-3">
+          {youResult?.finished ? (
+            <ShareResultButton
+              wpm={youResult.wpm}
+              accuracy={youResult.accuracy}
+              placement={youResult.placement}
+              name="You"
+              mode="Open Race"
+            />
+          ) : null}
+          <p className="text-sm text-chalk-muted">
+            Waiting for the host to rematch…
+          </p>
+        </div>
       )}
     </PageShell>
   );

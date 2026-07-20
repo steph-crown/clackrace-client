@@ -70,6 +70,7 @@ export default function ModeSelectPage() {
             title="Race CPU"
             description="Practice instantly against bots."
             whoJoins="Just you"
+            glyph="cpu"
             accent="cyan"
           />
         </li>
@@ -78,6 +79,7 @@ export default function ModeSelectPage() {
             title="Open Race"
             description="Host a race and share the link."
             whoJoins="Anyone with the link"
+            glyph="link"
             accent="magenta"
             busy={creating}
             onClick={() => void startOpenRace()}
@@ -89,6 +91,7 @@ export default function ModeSelectPage() {
             title="Quick Race"
             description="Jump in with whoever’s online."
             whoJoins="Random players"
+            glyph="match"
             accent="signal"
           />
         </li>
@@ -99,15 +102,17 @@ export default function ModeSelectPage() {
               title="Challenge a Friend"
               description="Invite someone by username or email."
               whoJoins="Someone you know"
+              glyph="challenge"
               accent="cyan"
             />
           ) : (
             <ModeCard
+              href="/signin?next=/challenge"
               title="Challenge a Friend"
               description="Invite someone by username or email."
               whoJoins="Someone you know"
-              disabled
-              disabledLabel="Sign in"
+              glyph="challenge"
+              actionLabel="Sign in →"
             />
           )}
         </li>

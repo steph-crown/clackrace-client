@@ -1,3 +1,5 @@
+import { ResultCard } from "@/components/race/results/ResultCard";
+
 export function StreaksSection() {
   return (
     <section
@@ -30,38 +32,14 @@ export function StreaksSection() {
           </ul>
         </div>
 
-        <div
-          data-reveal
-          className="relative mx-auto w-full max-w-sm rounded-sm border border-lane bg-asphalt p-6 shadow-[0_20px_60px_rgb(0_0_0_/0.45)]"
-        >
-          <div className="checkered-strip absolute inset-x-0 top-0 h-1.5 rounded-t-sm" />
-          <p className="font-heading text-[10px] font-semibold uppercase tracking-[0.25em] text-cyan">
-            Result card
-          </p>
-          <p className="mt-4 font-logo text-3xl text-chalk">You</p>
-          <div className="mt-6 flex items-end justify-between border-t border-lane pt-5">
-            <div>
-              <p className="font-heading text-[10px] uppercase tracking-wider text-chalk-muted">
-                WPM
-              </p>
-              <p className="font-heading text-4xl font-bold text-cyan">96</p>
-            </div>
-            <div>
-              <p className="font-heading text-[10px] uppercase tracking-wider text-chalk-muted">
-                Accuracy
-              </p>
-              <p className="font-heading text-4xl font-bold text-chalk">98%</p>
-            </div>
-            <div>
-              <p className="font-heading text-[10px] uppercase tracking-wider text-chalk-muted">
-                Streak
-              </p>
-              <p className="font-heading text-4xl font-bold text-signal">7</p>
-            </div>
-          </div>
-          <p className="mt-5 font-mono text-xs text-chalk-muted">
-            #clackrace · beat this
-          </p>
+        <div data-reveal className="mx-auto w-full max-w-sm">
+          <ResultCard
+            name="You"
+            wpm={96}
+            accuracy={98}
+            thirdLabel="Streak"
+            thirdValue="7"
+          />
         </div>
       </div>
     </section>

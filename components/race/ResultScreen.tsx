@@ -10,18 +10,21 @@ import { cn } from "@/lib/utils/cn";
 import { SignUpPrompt } from "@/components/auth/SignUpPrompt";
 import { MedalBadge } from "./results/MedalBadge";
 import { PlacementHeadline } from "./results/PlacementHeadline";
+import { ShareResultButton } from "./results/ShareResultActions";
 import { RaceChrome } from "./RaceChrome";
 
 type ResultScreenProps = {
   results: RacerResult[];
   submitted: boolean | null;
   onPlayAgain: () => void;
+  modeLabel?: string;
 };
 
 export function ResultScreen({
   results,
   submitted,
   onPlayAgain,
+  modeLabel = "Race CPU",
 }: ResultScreenProps) {
   const you = results.find((r) => r.isYou);
 
@@ -101,6 +104,15 @@ export function ResultScreen({
         <Button type="button" onClick={onPlayAgain}>
           Race again
         </Button>
+        {you ? (
+          <ShareResultButton
+            wpm={you.wpm}
+            accuracy={you.accuracy}
+            placement={you.placement}
+            name="You"
+            mode={modeLabel}
+          />
+        ) : null}
         <ButtonLink href="/play" variant="secondary">
           Modes
         </ButtonLink>

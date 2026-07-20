@@ -299,6 +299,25 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
     socket.on("race:positions", onPositions);
     socket.on("race:results", onResults);
     socket.on("session:ended", () => setPhase("ended"));
+    socket.on(
+      "matchmaking:requeued",
+      (p: {
+        ticketId: string;
+        status: string;
+        sessionId: string | null;
+        expiresAt: number;
+      }) => {
+        if (p.sessionId) {
+          router.replace(`/play/${p.sessionId}`);
+          return;
+        }
+        router.replace("/play/quick");
+      },
+    );
+    socket.on("matchmaking:alone", (p: { message?: string }) => {
+      showToast(p.message ?? "Still alone — try other modes.");
+      router.replace("/play/quick");
+    });
 
     void join();
 
@@ -313,8 +332,10 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
       socket.off("race:positions", onPositions);
       socket.off("race:results", onResults);
       socket.off("session:ended");
+      socket.off("matchmaking:requeued");
+      socket.off("matchmaking:alone");
     };
-  }, [sessionId, showToast]);
+  }, [sessionId, showToast, router]);
 
   useEffect(() => {
     if (phase !== "racing") return;

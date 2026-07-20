@@ -25,6 +25,14 @@ export default function SettingsPage() {
   const [carColor, setCarColor] = useState("#2ee6d6");
   const [font, setFont] = useState<string>("jetbrains-mono");
   const [streak, setStreak] = useState({ current: 0, longest: 0 });
+  const [milestones, setMilestones] = useState<
+    { days: number; unlocked: boolean }[]
+  >([
+    { days: 7, unlocked: false },
+    { days: 30, unlocked: false },
+    { days: 100, unlocked: false },
+  ]);
+  const [badges, setBadges] = useState<string[]>([]);
   const [colors, setColors] = useState<string[]>([...CAR_COLOR_PALETTE]);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -44,6 +52,12 @@ export default function SettingsPage() {
         current: res.data.streak.current,
         longest: res.data.streak.longest,
       });
+      if (res.data.cosmetics?.milestones) {
+        setMilestones(res.data.cosmetics.milestones);
+      }
+      if (res.data.cosmetics?.badges) {
+        setBadges(res.data.cosmetics.badges);
+      }
       if (res.data.carColors?.length) setColors(res.data.carColors);
     });
   }, [session, isPending, router]);
@@ -84,6 +98,27 @@ export default function SettingsPage() {
           Streak {streak.current} · Best {streak.longest} ·{" "}
           {session.user.email}
         </p>
+
+        <ul className="mt-6 flex flex-wrap gap-2">
+          {milestones.map((m) => (
+            <li
+              key={m.days}
+              className={cn(
+                "rounded-sm border px-3 py-1.5 font-heading text-[10px] font-semibold uppercase tracking-wider",
+                m.unlocked
+                  ? "border-signal/50 bg-signal/10 text-signal"
+                  : "border-lane text-chalk-muted",
+              )}
+            >
+              {m.days}-day {m.unlocked ? "unlocked" : "locked"}
+            </li>
+          ))}
+          {badges.includes("champion-crown") ? (
+            <li className="rounded-sm border border-signal/50 bg-signal/10 px-3 py-1.5 font-heading text-[10px] font-semibold uppercase tracking-wider text-signal">
+              Champion crown
+            </li>
+          ) : null}
+        </ul>
 
         <form onSubmit={save} className="mt-8 space-y-6">
           <label className="block">

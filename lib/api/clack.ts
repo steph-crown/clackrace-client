@@ -70,6 +70,10 @@ export type MeResponse = {
     longest: number;
     lastPlayedDate: string | null;
   };
+  cosmetics?: {
+    badges: string[];
+    milestones: { days: number; unlocked: boolean }[];
+  };
   fonts: string[];
   carColors: string[];
 };

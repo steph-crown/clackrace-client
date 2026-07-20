@@ -2,6 +2,7 @@ import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Logo } from "@/components/ui/Logo";
 import { CarSvg } from "@/components/race/CarSvg";
 import { HeroTypingStrip } from "./HeroTypingStrip";
+import { HeroAuthCta } from "./HeroAuthCta";
 import { SiteNav } from "./SiteNav";
 
 export function Hero() {
@@ -65,8 +66,7 @@ export function Hero() {
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <ButtonLink href="/play" size="lg">Play now</ButtonLink>
-          <ButtonLink href="/signin" variant="ghost" size="lg">Sign in</ButtonLink>
+          <HeroAuthCta />
         </div>
 
         <div className="mt-10 w-full max-w-xl">

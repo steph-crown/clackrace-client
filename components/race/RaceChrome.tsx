@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
+import { AuthNavActions } from "@/components/auth/AuthNavActions";
 import { raceAudio } from "@/lib/audio/manager";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils/cn";
@@ -53,6 +54,7 @@ export function RaceChrome({
   return (
     <div ref={rootRef} className={cn("relative flex items-center gap-2", className)}>
       {extras}
+      {!compact ? <AuthNavActions size="sm" /> : null}
       <Button
         type="button"
         variant="ghost"
