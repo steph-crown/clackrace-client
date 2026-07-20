@@ -37,6 +37,7 @@ type LobbyScreenProps = {
   commit?: {
     endsAt: number;
     promptedByName: string;
+    promptedByMemberId?: string;
     readyMemberIds: string[];
   } | null;
   youReady?: boolean;
@@ -127,8 +128,16 @@ export function LobbyScreen({
 
       {isQuick && commit ? (
         <p className="mt-6 rounded-sm border border-signal/40 bg-signal/10 px-4 py-3 text-sm text-chalk">
-          <span className="text-signal">{commit.promptedByName}</span> is ready —
-          race starts in{" "}
+          {commit.promptedByMemberId === memberId ||
+          (youReady && commit.promptedByName === displayName) ? (
+            <>You are ready</>
+          ) : (
+            <>
+              <span className="text-signal">{commit.promptedByName}</span> is
+              ready
+            </>
+          )}{" "}
+          — race starts in{" "}
           <span className="font-mono text-signal">{commitSeconds ?? 0}s</span>
         </p>
       ) : null}

@@ -61,6 +61,7 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
   const [commit, setCommit] = useState<{
     endsAt: number;
     promptedByName: string;
+    promptedByMemberId?: string;
     readyMemberIds: string[];
   } | null>(null);
   const [youReady, setYouReady] = useState(false);

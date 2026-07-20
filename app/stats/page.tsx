@@ -85,24 +85,32 @@ export default function StatsPage() {
           value={String(Math.round(elo.rating))}
           accent="cyan"
         />
-        <StatBlock label="Rated races" value={String(elo.racesCounted)} />
         <StatBlock
-          label="Tier"
-          value={elo.kFactorTier === "provisional" ? "Prov" : "Est"}
+          label="Rated races"
+          value={String(elo.racesCounted)}
+          hint="Human vs human only — CPU doesn’t count"
+        />
+        <StatBlock
+          label="Rating stage"
+          value={
+            elo.kFactorTier === "provisional" ? "Provisional" : "Established"
+          }
+          hint={
+            elo.kFactorTier === "provisional"
+              ? "First 20 rated races — rating moves faster"
+              : "20+ rated races — rating moves slower"
+          }
         />
       </dl>
 
       <section className="mt-12 w-full max-w-xl">
-        <div className="flex items-end justify-between gap-3">
-          <h2 className="font-heading text-xs font-semibold uppercase tracking-[0.2em] text-chalk-muted">
-            WPM over time
-          </h2>
-          {chart.length > 0 ? (
-            <p className="font-mono text-[10px] text-chalk-muted">
-              Scale 0–{Math.round(maxWpm)} (your peak in this window)
-            </p>
-          ) : null}
-        </div>
+        <h2 className="font-heading text-xs font-semibold uppercase tracking-[0.2em] text-chalk-muted">
+          WPM over time
+        </h2>
+        <p className="mt-1 text-xs text-chalk-muted">
+          Last {chart.length || "—"} finished races (all modes). Hover a bar for
+          details.
+        </p>
         {chart.length === 0 ? (
           <p className="mt-3 text-sm text-chalk-muted">No finished races yet.</p>
         ) : (
@@ -119,7 +127,9 @@ export default function StatsPage() {
                     type="button"
                     className={cn(
                       "relative flex-1 rounded-sm transition-opacity",
-                      hoverIdx === i ? "bg-cyan" : "bg-cyan/70 hover:bg-cyan/90",
+                      hoverIdx === i
+                        ? "bg-cyan"
+                        : "bg-cyan/70 hover:bg-cyan/90",
                     )}
                     style={{ height: `${Math.max(pct, 4)}%` }}
                     aria-label={`${Math.round(s.wpm)} WPM, ${Math.round(s.accuracy)}% accuracy`}
@@ -139,18 +149,16 @@ export default function StatsPage() {
                 </p>
                 <p className="mt-0.5 text-xs text-chalk-muted">
                   {Math.round(hover.accuracy)}% accuracy
+                  {hover.mode ? ` · ${formatMode(hover.mode)}` : ""}
                 </p>
                 <p className="mt-0.5 font-mono text-[10px] text-chalk-muted">
+                  Finished{" "}
                   {new Date(hover.at).toLocaleString(undefined, {
                     month: "short",
                     day: "numeric",
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
-                </p>
-                <p className="mt-1 text-[10px] text-chalk-muted">
-                  Bar height vs your best ({Math.round(maxWpm)} WPM) in last{" "}
-                  {chart.length} runs
                 </p>
               </div>
             ) : null}
@@ -162,6 +170,10 @@ export default function StatsPage() {
         <h2 className="font-heading text-xs font-semibold uppercase tracking-[0.2em] text-chalk-muted">
           Personal bests
         </h2>
+        <p className="mt-1 text-xs text-chalk-muted">
+          Race CPU only — used for ghost racing. Multiplayer peaks show in the
+          chart above.
+        </p>
         <ul className="mt-4 space-y-2">
           {personalBests.length === 0 ? (
             <li className="text-sm text-chalk-muted">
@@ -214,4 +226,21 @@ export default function StatsPage() {
       </div>
     </PageShell>
   );
+}
+
+function formatMode(mode: string): string {
+  switch (mode) {
+    case "solo_cpu":
+      return "Race CPU";
+    case "solo_ghost":
+      return "Ghost";
+    case "public":
+      return "Open Race";
+    case "matchmade":
+      return "Quick Race";
+    case "challenge":
+      return "Challenge";
+    default:
+      return mode.replace(/_/g, " ");
+  }
 }

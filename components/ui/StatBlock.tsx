@@ -4,6 +4,8 @@ type StatBlockProps = {
   label: string;
   value: string;
   accent?: "cyan" | "signal" | "chalk";
+  /** Short clarifying line under the value (e.g. rating tier). */
+  hint?: string;
 };
 
 const accentClass = {
@@ -16,6 +18,7 @@ export function StatBlock({
   label,
   value,
   accent = "chalk",
+  hint,
 }: StatBlockProps) {
   return (
     <div>
@@ -27,9 +30,13 @@ export function StatBlock({
           "font-heading text-3xl font-bold",
           accentClass[accent],
         )}
+        title={hint}
       >
         {value}
       </dd>
+      {hint ? (
+        <p className="mt-1 text-[10px] leading-snug text-chalk-muted">{hint}</p>
+      ) : null}
     </div>
   );
 }

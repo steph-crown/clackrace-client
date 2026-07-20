@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { fetchMe, patchMe } from "@/lib/api/clack";
 import { useSession, signOut } from "@/lib/auth/client";
 import { CAR_COLOR_PALETTE } from "@/lib/car-colors";
+import { CarSvg } from "@/components/race/CarSvg";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -139,7 +140,14 @@ export default function SettingsPage() {
             <legend className="font-heading text-[10px] font-semibold uppercase tracking-[0.2em] text-chalk-muted">
               Car color
             </legend>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-4 flex justify-center">
+              <CarSvg
+                bodyColor={carColor}
+                className="w-40 sm:w-48"
+                label="You"
+              />
+            </div>
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
               {colors.map((c) => (
                 <button
                   key={c}
