@@ -65,6 +65,7 @@ export function SoloRaceApp() {
   const lastFrameRef = useRef<number>(0);
   const countdownIdRef = useRef<number | null>(null);
   const ghostStrokesRef = useRef<KeystrokeEntry[]>([]);
+  const ghostMetaRef = useRef<{ wpm: number; accuracy: number } | null>(null);
   const ghostModeRef = useRef(false);
 
   useEffect(() => {
@@ -83,9 +84,8 @@ export function SoloRaceApp() {
       setGhostAvailable(false);
       return;
     }
-    const d = difficulty === "expert" ? "hard" : difficulty;
-    void fetchGhost(d).then((res) => setGhostAvailable(res.ok));
-  }, [authSession?.user, difficulty]);
+    void fetchGhost().then((res) => setGhostAvailable(res.ok));
+  }, [authSession?.user]);
 
   useEffect(() => {
     typingRef.current = typing;
@@ -110,7 +110,7 @@ export function SoloRaceApp() {
         player,
         {
           id: "ghost",
-          label: "Ghost",
+          label: "Your best",
           progress: ghostProgress,
           bodyColor: "#6b7280",
           accentColor: "#e8e6e1",
@@ -139,11 +139,29 @@ export function SoloRaceApp() {
         finalTyping.finishedAtMs != null && raceStart != null
           ? finalTyping.finishedAtMs - raceStart
           : null;
+
+      let ghostInput = null;
+      if (ghostModeRef.current && ghostMetaRef.current) {
+        const passageLen = finalTyping.passage.length;
+        const strokes = ghostStrokesRef.current;
+        const progress = ghostProgressAt(strokes, passageLen, elapsed);
+        const last = strokes[strokes.length - 1];
+        const ghostFinished =
+          last != null && last.timestampMs <= elapsed && progress >= 1;
+        ghostInput = {
+          finishElapsedMs: ghostFinished ? last.timestampMs : null,
+          progress,
+          wpm: ghostMetaRef.current.wpm,
+          accuracy: ghostMetaRef.current.accuracy,
+        };
+      }
+
       const ranked = buildSoloResults(
         finalTyping,
         finalCpus,
         elapsed,
         playerFinishElapsed,
+        ghostInput,
       );
       setResults(ranked);
       setPhase("results");
@@ -237,6 +255,7 @@ export function SoloRaceApp() {
     setGhostMode(false);
     ghostModeRef.current = false;
     ghostStrokesRef.current = [];
+    ghostMetaRef.current = null;
     setGhostProgress(0);
 
     const pool = passages.length > 0 ? passages : undefined;
@@ -288,9 +307,8 @@ export function SoloRaceApp() {
   }, [passages, difficulty, cpuCount, startLoop]);
 
   const beginGhostCountdown = useCallback(async () => {
-    const d = difficulty === "expert" ? "hard" : difficulty;
     setGhostBusy(true);
-    const res = await fetchGhost(d);
+    const res = await fetchGhost();
     setGhostBusy(false);
     if (!res.ok) {
       setGhostAvailable(false);
@@ -300,12 +318,16 @@ export function SoloRaceApp() {
     setGhostMode(true);
     ghostModeRef.current = true;
     ghostStrokesRef.current = res.data.strokes;
+    ghostMetaRef.current = {
+      wpm: res.data.bestWpm,
+      accuracy: res.data.bestAccuracy,
+    };
     setGhostProgress(0);
 
     const picked: Passage = {
       id: res.data.passageId,
       text: res.data.passageText,
-      difficulty: d,
+      difficulty: res.data.difficulty,
       source: "official",
     };
     const state = createTypingState(picked.text);
@@ -348,7 +370,7 @@ export function SoloRaceApp() {
       if (step === "GO") raceAudio.play("go");
       else raceAudio.play("countdown");
     }, 700);
-  }, [difficulty, startLoop]);
+  }, [startLoop]);
 
   useEffect(() => {
     return () => {
@@ -429,6 +451,7 @@ export function SoloRaceApp() {
           results={results}
           submitted={submitted}
           onPlayAgain={resetToSetup}
+          modeLabel={ghostMode ? "Beat your best" : "Race CPU"}
         />
       </PageShell>
     );

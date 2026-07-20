@@ -81,35 +81,40 @@ export function SoloSetup({
           />
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <Button
-            type="button"
-            size="lg"
-            onClick={() => {
-              void raceAudio.ensureUnlocked();
-              onStart();
-            }}
-            className="sm:min-w-[220px]"
-          >
-            Start race
-          </Button>
-          {onStartGhost ? (
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-3">
             <Button
               type="button"
               size="lg"
-              variant="secondary"
-              disabled={!ghostAvailable || ghostBusy}
               onClick={() => {
                 void raceAudio.ensureUnlocked();
-                onStartGhost();
+                onStart();
               }}
+              className="sm:min-w-[220px]"
             >
-              {ghostBusy
-                ? "Loading ghost…"
-                : ghostAvailable
-                  ? "Race your ghost"
-                  : "Ghost (need a PB)"}
+              Start race
             </Button>
+            {onStartGhost ? (
+              <Button
+                type="button"
+                size="lg"
+                variant="secondary"
+                disabled={!ghostAvailable || ghostBusy}
+                onClick={() => {
+                  void raceAudio.ensureUnlocked();
+                  onStartGhost();
+                }}
+              >
+                {ghostBusy ? "Loading…" : "Beat your best"}
+              </Button>
+            ) : null}
+          </div>
+          {onStartGhost ? (
+            <p className="max-w-md text-xs text-chalk-muted">
+              {ghostAvailable
+                ? "Replays your fastest run as a grey car — same passage, same pacing. Beat that version of you."
+                : "Finish any race while signed in to unlock a replay of your personal best."}
+            </p>
           ) : null}
         </div>
       </div>

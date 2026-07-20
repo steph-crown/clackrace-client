@@ -82,15 +82,17 @@ export default function StatsPage() {
     );
   }
 
-  const { elo, series, personalBests } = res.data;
+  const { elo, series, personalBest } = res.data;
   const chart = series.slice(-24);
   const maxWpm = Math.max(1, ...chart.map((s) => s.wpm));
-  const peakWpm = Math.max(0, ...series.map((s) => s.wpm));
   const hover = hoverIdx != null ? chart[hoverIdx] : null;
   const ratingHint =
     elo.racesCounted < 20
       ? `From wins/losses vs signed-in racers. Moves more while you’re new (${elo.racesCounted}/20).`
       : "From wins/losses vs signed-in racers. Settles more slowly after 20 races.";
+  const pbHint = personalBest
+    ? `${Math.round(personalBest.accuracy)}% accuracy · ${formatMode(personalBest.mode)}`
+    : "Best verified finish — any mode";
 
   return (
     <PageShell centered logoHref="/play" headerRight={<RaceChrome />}>
@@ -104,7 +106,7 @@ export default function StatsPage() {
         />
       </h1>
       <p className="mt-2 text-sm text-chalk-muted">
-        Trends, personal bests, and rating — not a vanity dashboard.
+        Trends, personal best, and rating — not a vanity dashboard.
       </p>
 
       <dl className="mt-10 grid grid-cols-3 gap-4">
@@ -120,10 +122,12 @@ export default function StatsPage() {
           hint="Human vs human only — CPU doesn’t count"
         />
         <StatBlock
-          label="Peak WPM"
-          value={peakWpm > 0 ? String(Math.round(peakWpm)) : "—"}
+          label="Personal best"
+          value={
+            personalBest ? String(Math.round(personalBest.wpm)) : "—"
+          }
           accent="signal"
-          hint="Best verified finish across all modes"
+          hint={pbHint}
         />
       </dl>
 
@@ -192,34 +196,41 @@ export default function StatsPage() {
 
       <section className="mt-12 w-full max-w-xl">
         <h2 className="font-heading text-xs font-semibold uppercase tracking-[0.2em] text-chalk-muted">
-          Personal bests
+          Personal best
         </h2>
         <p className="mt-1 text-xs text-chalk-muted">
-          Highest verified WPM per difficulty (any mode) — not an average.
-          Powers ghost racing. Peak WPM above is your single best across all
-          difficulties.
+          Your fastest verified finish. Beat your best on Race CPU replays this
+          run as a ghost car.
         </p>
-        <ul className="mt-4 space-y-2">
-          {personalBests.length === 0 ? (
-            <li className="text-sm text-chalk-muted">
-              Finish a verified race to set a PB (powers ghost racing).
-            </li>
-          ) : (
-            personalBests.map((pb) => (
-              <li
-                key={pb.difficulty}
-                className="flex items-center justify-between rounded-sm border border-lane bg-asphalt-raised px-4 py-3"
-              >
-                <span className="font-heading text-sm font-semibold uppercase text-chalk">
-                  {pb.difficulty}
-                </span>
-                <span className="font-mono text-sm text-cyan">
-                  {pb.bestWpm} WPM · {pb.bestAccuracy}%
-                </span>
-              </li>
-            ))
-          )}
-        </ul>
+        {personalBest ? (
+          <div className="mt-4 flex items-end justify-between rounded-sm border border-lane bg-asphalt-raised px-4 py-3">
+            <div>
+              <p className="font-mono text-2xl font-semibold text-cyan">
+                {Math.round(personalBest.wpm)}{" "}
+                <span className="text-sm font-normal text-chalk-muted">WPM</span>
+              </p>
+              <p className="mt-1 font-mono text-sm text-chalk">
+                {Math.round(personalBest.accuracy)}% accuracy
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="font-heading text-[10px] font-semibold uppercase tracking-wider text-chalk-muted">
+                {formatMode(personalBest.mode)}
+              </p>
+              <p className="mt-1 font-mono text-[10px] text-chalk-muted">
+                {new Date(personalBest.achievedAt).toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-chalk-muted">
+            Finish a verified race to set your personal best.
+          </p>
+        )}
       </section>
 
       <section className="mt-12 w-full max-w-xl">

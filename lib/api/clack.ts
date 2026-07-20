@@ -216,24 +216,24 @@ export async function fetchMyStats() {
   return clackFetch<{
     elo: { rating: number; racesCounted: number; kFactorTier: string };
     series: { wpm: number; accuracy: number; at: string; mode: string }[];
-    personalBests: {
-      difficulty: string;
-      bestWpm: number;
-      bestAccuracy: number;
-      passageId: string;
+    personalBest: {
+      wpm: number;
+      accuracy: number;
+      mode: string;
       achievedAt: string;
-    }[];
+    } | null;
     mistypeHeatmap: Record<string, number>;
   }>("/stats/me");
 }
 
-export async function fetchGhost(difficulty: "easy" | "medium" | "hard") {
+export async function fetchGhost() {
   return clackFetch<{
-    difficulty: string;
     bestWpm: number;
     bestAccuracy: number;
     passageId: string;
     passageText: string;
     strokes: { charIndex: number; timestampMs: number }[];
-  }>(`/stats/ghost?difficulty=${difficulty}`);
+    mode: string;
+    difficulty: "easy" | "medium" | "hard";
+  }>("/stats/ghost");
 }

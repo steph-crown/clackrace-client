@@ -14,6 +14,15 @@ export type RacerResult = {
   bodyColor: string;
 };
 
+/** Optional ghost (replay of your personal best) for solo ghost races. */
+export type GhostResultInput = {
+  /** Elapsed ms from GO when the ghost finished the passage; null if unfinished. */
+  finishElapsedMs: number | null;
+  progress: number;
+  wpm: number;
+  accuracy: number;
+};
+
 function wpmFromChars(chars: number, durationMs: number): number {
   if (durationMs <= 0 || chars <= 0) return 0;
   return chars / 5 / (durationMs / 60000);
@@ -25,6 +34,7 @@ export function buildSoloResults(
   raceElapsedMs: number,
   /** Elapsed ms from GO → player finish (for placement). WPM still uses typing duration. */
   playerFinishElapsedMs: number | null = null,
+  ghost: GhostResultInput | null = null,
 ): RacerResult[] {
   const passageLen = typing.passage.length;
 
@@ -62,7 +72,25 @@ export function buildSoloResults(
     };
   });
 
-  const ranked = [player, ...cpuResults].sort((a, b) => {
+  const ghostResult: Omit<RacerResult, "placement"> | null = ghost
+    ? {
+        id: "ghost",
+        name: "Your best",
+        isYou: false,
+        isCpu: true,
+        wpm: ghost.wpm,
+        accuracy: ghost.accuracy,
+        progress: ghost.progress,
+        finishedAtMs: ghost.finishElapsedMs,
+        bodyColor: "#6b7280",
+      }
+    : null;
+
+  const ranked = [
+    player,
+    ...cpuResults,
+    ...(ghostResult ? [ghostResult] : []),
+  ].sort((a, b) => {
     const aFin = a.finishedAtMs;
     const bFin = b.finishedAtMs;
     if (aFin != null && bFin != null) return aFin - bFin;
