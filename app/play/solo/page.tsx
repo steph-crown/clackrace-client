@@ -1,5 +1,10 @@
 import { SoloRaceApp } from "@/components/race/SoloRaceApp";
 
-export default function SoloPage() {
-  return <SoloRaceApp />;
+type SoloPageProps = {
+  searchParams: Promise<{ beat?: string }>;
+};
+
+export default async function SoloPage({ searchParams }: SoloPageProps) {
+  const sp = await searchParams;
+  return <SoloRaceApp autoBeat={sp.beat === "1"} />;
 }

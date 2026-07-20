@@ -38,7 +38,12 @@ import { SoloSetup } from "./solo/SoloSetup";
 
 type Phase = "setup" | "countdown" | "racing" | "results";
 
-export function SoloRaceApp() {
+type SoloRaceAppProps = {
+  /** From `/play/solo?beat=1` — jump straight into Beat your best. */
+  autoBeat?: boolean;
+};
+
+export function SoloRaceApp({ autoBeat = false }: SoloRaceAppProps) {
   const { data: authSession } = useSession();
   const [phase, setPhase] = useState<Phase>("setup");
   const [difficulty, setDifficulty] = useState<CpuDifficulty>("medium");
@@ -67,6 +72,7 @@ export function SoloRaceApp() {
   const ghostStrokesRef = useRef<KeystrokeEntry[]>([]);
   const ghostMetaRef = useRef<{ wpm: number; accuracy: number } | null>(null);
   const ghostModeRef = useRef(false);
+  const autoBeatStartedRef = useRef(false);
 
   useEffect(() => {
     void fetchPassages().then(setPassages);
@@ -371,6 +377,24 @@ export function SoloRaceApp() {
       else raceAudio.play("countdown");
     }, 700);
   }, [startLoop]);
+
+  useEffect(() => {
+    if (!autoBeat || autoBeatStartedRef.current) return;
+    if (phase !== "setup") return;
+    if (!authSession?.user || !ghostAvailable || ghostBusy) return;
+    autoBeatStartedRef.current = true;
+    void beginGhostCountdown();
+    if (typeof window !== "undefined") {
+      window.history.replaceState({}, "", "/play/solo");
+    }
+  }, [
+    autoBeat,
+    phase,
+    authSession?.user,
+    ghostAvailable,
+    ghostBusy,
+    beginGhostCountdown,
+  ]);
 
   useEffect(() => {
     return () => {

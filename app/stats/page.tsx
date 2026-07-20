@@ -199,31 +199,42 @@ export default function StatsPage() {
           Personal best
         </h2>
         <p className="mt-1 text-xs text-chalk-muted">
-          Your fastest verified finish. Beat your best on Race CPU replays this
-          run as a ghost car.
+          Your fastest verified finish — race it as a ghost car.
         </p>
         {personalBest ? (
-          <div className="mt-4 flex items-end justify-between rounded-sm border border-lane bg-asphalt-raised px-4 py-3">
-            <div>
-              <p className="font-mono text-2xl font-semibold text-cyan">
-                {Math.round(personalBest.wpm)}{" "}
-                <span className="text-sm font-normal text-chalk-muted">WPM</span>
-              </p>
-              <p className="mt-1 font-mono text-sm text-chalk">
-                {Math.round(personalBest.accuracy)}% accuracy
-              </p>
+          <div className="mt-4 rounded-sm border border-lane bg-asphalt-raised px-4 py-3">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="font-mono text-2xl font-semibold text-cyan">
+                  {Math.round(personalBest.wpm)}{" "}
+                  <span className="text-sm font-normal text-chalk-muted">
+                    WPM
+                  </span>
+                </p>
+                <p className="mt-1 font-mono text-sm text-chalk">
+                  {Math.round(personalBest.accuracy)}% accuracy
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="font-heading text-[10px] font-semibold uppercase tracking-wider text-chalk-muted">
+                  {formatMode(personalBest.mode)}
+                </p>
+                <p className="mt-1 font-mono text-[10px] text-chalk-muted">
+                  {new Date(personalBest.achievedAt).toLocaleDateString(
+                    undefined,
+                    {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    },
+                  )}
+                </p>
+              </div>
             </div>
-            <div className="text-right">
-              <p className="font-heading text-[10px] font-semibold uppercase tracking-wider text-chalk-muted">
-                {formatMode(personalBest.mode)}
-              </p>
-              <p className="mt-1 font-mono text-[10px] text-chalk-muted">
-                {new Date(personalBest.achievedAt).toLocaleDateString(undefined, {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </p>
+            <div className="mt-4">
+              <ButtonLink href="/play/solo?beat=1" size="sm">
+                Beat your best
+              </ButtonLink>
             </div>
           </div>
         ) : (
