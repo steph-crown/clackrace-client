@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { track } from "@/lib/analytics/track";
 import { fetchMyStats } from "@/lib/api/clack";
 import { useSession } from "@/lib/auth/client";
 import { useChampionStatus } from "@/lib/hooks/useChampionStatus";
@@ -23,6 +24,7 @@ export default function StatsPage() {
 
   useEffect(() => {
     if (!session?.user) return;
+    track("stats_view");
     void fetchMyStats().then(setRes);
   }, [session?.user]);
 
@@ -228,7 +230,11 @@ export default function StatsPage() {
               </div>
             </div>
             <div className="mt-4">
-              <ButtonLink href="/play/solo?beat=1" size="sm">
+              <ButtonLink
+                href="/play/solo?beat=1"
+                size="sm"
+                onClick={() => track("solo.beat_best_click", { source: "stats" })}
+              >
                 Beat your best
               </ButtonLink>
             </div>

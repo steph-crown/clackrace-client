@@ -3,7 +3,8 @@
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
+import { track } from "@/lib/analytics/track";
 import { FinalCta } from "./FinalCta";
 import { Hero } from "./Hero";
 import { HowItWorks } from "./HowItWorks";
@@ -17,6 +18,10 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 export function LandingPage() {
   const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    track("landing_view");
+  }, []);
 
   useGSAP(
     () => {

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { track } from "@/lib/analytics/track";
 import { cn } from "@/lib/utils/cn";
 
 type RaceChromeMenuLinkProps = {
@@ -18,7 +19,10 @@ export function RaceChromeMenuLink({
     <Link
       href={href}
       role="menuitem"
-      onClick={onNavigate}
+      onClick={() => {
+        track("menu_navigate", { target: href });
+        onNavigate();
+      }}
       className={cn(
         "block rounded-sm px-3 py-2 font-heading text-xs font-semibold uppercase tracking-wider transition-colors",
         active

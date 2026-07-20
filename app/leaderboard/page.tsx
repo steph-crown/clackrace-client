@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { track } from "@/lib/analytics/track";
 import { useSession } from "@/lib/auth/client";
 import {
   fetchDailyChampion,
@@ -51,6 +52,7 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    track("leaderboard_view", { scope });
     let cancelled = false;
     void Promise.all([
       fetchLeaderboard(scope),

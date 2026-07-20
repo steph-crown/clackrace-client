@@ -157,6 +157,7 @@ export function ModeCard({
     return (
       <Link
         href={href}
+        onClick={onClick}
         className={cn(
           layout,
           "border-lane bg-asphalt-raised transition-colors",

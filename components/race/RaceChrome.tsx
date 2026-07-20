@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { AuthNavActions } from "@/components/auth/AuthNavActions";
+import { track } from "@/lib/analytics/track";
 import { raceAudio } from "@/lib/audio/manager";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils/cn";
@@ -78,7 +79,10 @@ export function RaceChrome({
         aria-controls={menuId}
         onClick={() => {
           void raceAudio.ensureUnlocked();
-          setOpen((v) => !v);
+          setOpen((v) => {
+            if (!v) track("menu_open");
+            return !v;
+          });
         }}
       >
         Menu

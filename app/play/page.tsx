@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { track } from "@/lib/analytics/track";
 import { useSession } from "@/lib/auth/client";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ModeCard } from "@/components/ui/ModeCard";
@@ -17,7 +18,12 @@ export default function ModeSelectPage() {
   const [creating, setCreating] = useState(false);
   const signedIn = !!session?.user;
 
+  useEffect(() => {
+    track("mode_select_view");
+  }, []);
+
   const startOpenRace = async () => {
+    track("mode_chosen", { mode: "open" });
     setCreating(true);
     const created = await createPublicSession(getOrCreateGuestSessionToken());
     if (!created) {
@@ -25,6 +31,7 @@ export default function ModeSelectPage() {
       router.push("/play/public");
       return;
     }
+    track("open.session_created", { sessionId: created.id });
     router.push(`/play/${created.id}`);
   };
 
@@ -72,6 +79,7 @@ export default function ModeSelectPage() {
             whoJoins="Just you"
             glyph="cpu"
             accent="cyan"
+            onClick={() => track("mode_chosen", { mode: "solo" })}
           />
         </li>
         <li>
@@ -93,6 +101,7 @@ export default function ModeSelectPage() {
             whoJoins="Random players"
             glyph="match"
             accent="signal"
+            onClick={() => track("mode_chosen", { mode: "quick" })}
           />
         </li>
         <li>
@@ -104,6 +113,7 @@ export default function ModeSelectPage() {
               whoJoins="Someone you know"
               glyph="challenge"
               accent="cyan"
+              onClick={() => track("mode_chosen", { mode: "challenge" })}
             />
           ) : (
             <ModeCard
@@ -113,6 +123,7 @@ export default function ModeSelectPage() {
               whoJoins="Someone you know"
               glyph="challenge"
               actionLabel="Sign in →"
+              onClick={() => track("mode_chosen", { mode: "challenge" })}
             />
           )}
         </li>
