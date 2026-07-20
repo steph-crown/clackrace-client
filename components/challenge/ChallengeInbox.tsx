@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   notificationsStreamUrl,
   respondChallenge,
@@ -24,6 +24,11 @@ export function ChallengeInbox() {
   const [invite, setInvite] = useState<ChallengeRecord | null>(null);
   const [expired, setExpired] = useState(false);
   const [busy, setBusy] = useState(false);
+  const inviteIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    inviteIdRef.current = invite?.id ?? null;
+  }, [invite]);
 
   useEffect(() => {
     if (!session?.user) return;
@@ -35,29 +40,38 @@ export function ChallengeInbox() {
     const onChallenge = (ev: MessageEvent) => {
       try {
         const data = JSON.parse(ev.data) as InviteEvent;
+        const uid = session.user.id;
+
         if (data.type === "invite" && data.challenge.status === "pending") {
-          if (data.challenge.recipientId === session.user.id) {
+          if (data.challenge.recipientId === uid) {
             setInvite(data.challenge);
             setExpired(false);
           }
+          return;
         }
+
         if (
           data.type === "expired" ||
           data.type === "revoked" ||
           data.type === "declined"
         ) {
-          if (invite?.id === data.challenge.id || data.type === "expired") {
-            if (data.challenge.recipientId === session.user.id) {
-              setExpired(true);
-            }
+          const matchesOpen =
+            inviteIdRef.current === data.challenge.id ||
+            data.challenge.recipientId === uid;
+          if (matchesOpen) {
+            setInvite(null);
+            setExpired(data.type === "expired");
           }
+          return;
         }
+
         if (data.type === "accepted" && data.sessionId) {
           if (
-            data.challenge.requesterId === session.user.id ||
-            data.challenge.recipientId === session.user.id
+            data.challenge.requesterId === uid ||
+            data.challenge.recipientId === uid
           ) {
             setInvite(null);
+            setExpired(false);
             router.push(`/play/${data.sessionId}`);
           }
         }
@@ -71,8 +85,7 @@ export function ChallengeInbox() {
       es.removeEventListener("challenge", onChallenge as EventListener);
       es.close();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reconnect on user id only
-  }, [session?.user?.id, router]);
+  }, [session?.user?.id, session?.user, router]);
 
   if (!session?.user || (!invite && !expired)) return null;
 
@@ -109,10 +122,10 @@ export function ChallengeInbox() {
               This invite has expired
             </h2>
             <p className="mt-2 text-sm text-chalk-muted">
-              Head back to modes or race the CPU while you wait.
+              Head back to race select or race the CPU while you wait.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <ButtonLink href="/play">Modes</ButtonLink>
+              <ButtonLink href="/play">All races</ButtonLink>
               <ButtonLink href="/play/solo" variant="secondary">
                 Race CPU
               </ButtonLink>

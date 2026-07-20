@@ -1,18 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  fetchDailyChampion,
-  fetchLeaderboard,
-  fetchMyStats,
-} from "@/lib/api/clack";
+import { fetchMyStats } from "@/lib/api/clack";
 import { useSession } from "@/lib/auth/client";
+import { useChampionStatus } from "@/lib/hooks/useChampionStatus";
 import { ButtonLink } from "@/components/ui/ButtonLink";
-import { ChampionCrowns } from "@/components/ui/ChampionCrown";
+import { ChampionCrowns } from "@/components/ui/ChampionCrowns";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PageShell } from "@/components/ui/PageShell";
 import { RaceChrome } from "@/components/race/RaceChrome";
 import { StatBlock } from "@/components/ui/StatBlock";
+import { formatMode } from "@/lib/race/format-mode";
 import { cn } from "@/lib/utils/cn";
 
 type StatsData = Awaited<ReturnType<typeof fetchMyStats>>;
@@ -21,23 +19,11 @@ export default function StatsPage() {
   const { data: session, isPending } = useSession();
   const [res, setRes] = useState<StatsData | null>(null);
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
-  const [crowns, setCrowns] = useState({ daily: false, overall: false });
+  const crowns = useChampionStatus(session?.user?.id);
 
   useEffect(() => {
     if (!session?.user) return;
     void fetchMyStats().then(setRes);
-    const userId = session.user.id;
-    void Promise.all([fetchDailyChampion(), fetchLeaderboard("all_time")]).then(
-      ([champ, board]) => {
-        setCrowns({
-          daily: champ.ok && champ.data.champion?.userId === userId,
-          overall:
-            board.ok &&
-            board.data.entries[0]?.userId === userId &&
-            board.data.entries[0].rank === 1,
-        });
-      },
-    );
   }, [session?.user]);
 
   const heatmapTop = useMemo(() => {
@@ -72,11 +58,19 @@ export default function StatsPage() {
     );
   }
 
-  if (!res?.ok) {
+  if (!res) {
+    return (
+      <PageShell centered logoHref="/play" headerRight={<RaceChrome />}>
+        <p className="text-sm text-chalk-muted">Loading…</p>
+      </PageShell>
+    );
+  }
+
+  if (!res.ok) {
     return (
       <PageShell centered logoHref="/play" headerRight={<RaceChrome />}>
         <p className="text-sm text-danger">
-          {res?.error.message ?? "Could not load stats."}
+          {res.error.message ?? "Could not load stats."}
         </p>
       </PageShell>
     );
@@ -102,6 +96,8 @@ export default function StatsPage() {
         <ChampionCrowns
           daily={crowns.daily}
           overall={crowns.overall}
+          dailyWpm={crowns.dailyWpm}
+          overallWpm={crowns.overallWpm}
           size="md"
         />
       </h1>
@@ -273,21 +269,4 @@ export default function StatsPage() {
       </div>
     </PageShell>
   );
-}
-
-function formatMode(mode: string): string {
-  switch (mode) {
-    case "solo_cpu":
-      return "Race CPU";
-    case "solo_ghost":
-      return "Ghost";
-    case "public":
-      return "Open Race";
-    case "matchmade":
-      return "Quick Race";
-    case "challenge":
-      return "Challenge";
-    default:
-      return mode.replace(/_/g, " ");
-  }
 }

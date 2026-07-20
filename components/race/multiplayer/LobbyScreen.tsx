@@ -142,7 +142,7 @@ export function LobbyScreen({
         </p>
       ) : null}
 
-      {(phase === "lobby") && (isQuick || !isCreator) ? (
+      {phase === "lobby" || phase === "results" ? (
         <Button
           type="button"
           variant="secondary"
@@ -189,7 +189,7 @@ export function LobbyScreen({
               >
                 <div className="flex items-center gap-3">
                   <span className="font-mono text-sm text-chalk-muted">
-                    {r.finished ? `#${r.placement}` : "DNF"}
+                    {r.finished ? placeOrdinal(r.placement) : "DNF"}
                   </span>
                   <MedalBadge tier={tier} />
                   <span
@@ -214,7 +214,11 @@ export function LobbyScreen({
       {phase !== "results" ? (
         <>
           <div className="mt-10">
-            <RacerList members={members} memberId={memberId} />
+            <RacerList
+              members={members}
+              memberId={memberId}
+              maxPlayers={isChallenge ? 2 : isQuick ? 6 : 8}
+            />
           </div>
           <div className="mt-10">
             <SessionLeaderboard entries={leaderboard} memberId={memberId} />
@@ -234,7 +238,7 @@ export function LobbyScreen({
                 ? "Ready — waiting…"
                 : "Race again"
               : youReady
-                ? "Ready"
+                ? "Ready — waiting…"
                 : "Ready"}
           </Button>
           {phase === "results" && youResult?.finished ? (
@@ -295,7 +299,11 @@ export function LobbyScreen({
             <Button type="button" variant="secondary" onClick={onEndSession}>
               End session
             </Button>
-          ) : null}
+          ) : (
+            <Button type="button" variant="ghost" onClick={onLeave}>
+              Leave
+            </Button>
+          )}
         </div>
       ) : isCreator ? (
         <div className="mt-10 flex flex-wrap gap-3">

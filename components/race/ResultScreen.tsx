@@ -79,7 +79,7 @@ export function ResultScreen({
             >
               <div className="flex items-center gap-3">
                 <span className="font-mono text-sm text-chalk-muted">
-                  #{r.placement}
+                  {placeOrdinal(r.placement)}
                 </span>
                 <MedalBadge tier={tier} />
                 <span
@@ -114,7 +114,7 @@ export function ResultScreen({
           />
         ) : null}
         <ButtonLink href="/play" variant="secondary">
-          Modes
+          All races
         </ButtonLink>
       </div>
     </div>

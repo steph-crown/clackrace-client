@@ -2,18 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  fetchDailyChampion,
-  fetchLeaderboard,
-  fetchMe,
-  patchMe,
-} from "@/lib/api/clack";
+import { fetchMe, patchMe } from "@/lib/api/clack";
 import { useSession, signOut } from "@/lib/auth/client";
 import { CAR_COLOR_PALETTE } from "@/lib/car-colors";
+import { useChampionStatus } from "@/lib/hooks/useChampionStatus";
 import { CarSvg } from "@/components/race/CarSvg";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
-import { ChampionCrowns } from "@/components/ui/ChampionCrown";
+import { ChampionCrowns } from "@/components/ui/ChampionCrowns";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PageShell } from "@/components/ui/PageShell";
 import { cn } from "@/lib/utils/cn";
@@ -41,7 +37,7 @@ export default function SettingsPage() {
   ]);
   const [badges, setBadges] = useState<string[]>([]);
   const [colors, setColors] = useState<string[]>([...CAR_COLOR_PALETTE]);
-  const [crowns, setCrowns] = useState({ daily: false, overall: false });
+  const crowns = useChampionStatus(session?.user?.id);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -51,7 +47,6 @@ export default function SettingsPage() {
       router.replace("/signin");
       return;
     }
-    const userId = session.user.id;
     void fetchMe().then((res) => {
       if (!res.ok) return;
       setUsername(res.data.user.username ?? res.data.user.name ?? "");
@@ -69,17 +64,6 @@ export default function SettingsPage() {
       }
       if (res.data.carColors?.length) setColors(res.data.carColors);
     });
-    void Promise.all([fetchDailyChampion(), fetchLeaderboard("all_time")]).then(
-      ([champ, board]) => {
-        setCrowns({
-          daily: champ.ok && champ.data.champion?.userId === userId,
-          overall:
-            board.ok &&
-            board.data.entries[0]?.userId === userId &&
-            board.data.entries[0].rank === 1,
-        });
-      },
-    );
   }, [session, isPending, router]);
 
   const save = async (e: React.FormEvent) => {
@@ -116,6 +100,8 @@ export default function SettingsPage() {
           <ChampionCrowns
             daily={crowns.daily}
             overall={crowns.overall}
+            dailyWpm={crowns.dailyWpm}
+            overallWpm={crowns.overallWpm}
             size="md"
           />
         </h1>
@@ -140,7 +126,7 @@ export default function SettingsPage() {
           ))}
           {crowns.daily ? (
             <li className="flex items-center gap-1.5 rounded-sm border border-signal/50 bg-signal/10 px-3 py-1.5 font-heading text-[10px] font-semibold uppercase tracking-wider text-signal">
-              <ChampionCrowns daily />
+              <ChampionCrowns daily dailyWpm={crowns.dailyWpm} />
               Daily Champion
             </li>
           ) : null}
@@ -151,7 +137,7 @@ export default function SettingsPage() {
           ) : null}
           {crowns.overall ? (
             <li className="flex items-center gap-1.5 rounded-sm border border-cyan/50 bg-cyan/10 px-3 py-1.5 font-heading text-[10px] font-semibold uppercase tracking-wider text-cyan">
-              <ChampionCrowns overall />
+              <ChampionCrowns overall overallWpm={crowns.overallWpm} />
               Overall Champion
             </li>
           ) : null}
@@ -231,7 +217,7 @@ export default function SettingsPage() {
               {busy ? "Saving…" : "Save"}
             </Button>
             <ButtonLink href="/play" variant="secondary">
-              Modes
+              All races
             </ButtonLink>
             <Button
               type="button"

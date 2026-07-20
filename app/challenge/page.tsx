@@ -148,7 +148,7 @@ export default function ChallengePage() {
             Race CPU
           </ButtonLink>
           <ButtonLink href="/play" variant="ghost">
-            Modes
+            All races
           </ButtonLink>
         </div>
       </PageShell>

@@ -8,7 +8,7 @@ export function SessionEndedState() {
         Session ended
       </h1>
       <ButtonLink href="/play" className="mt-8">
-        Back to modes
+        Back to races
       </ButtonLink>
     </PageShell>
   );

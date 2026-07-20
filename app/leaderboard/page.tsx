@@ -9,7 +9,7 @@ import {
   type LeaderboardScope,
 } from "@/lib/api/clack";
 import { ButtonLink } from "@/components/ui/ButtonLink";
-import { ChampionCrowns } from "@/components/ui/ChampionCrown";
+import { ChampionCrowns } from "@/components/ui/ChampionCrowns";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { PageShell } from "@/components/ui/PageShell";
 import { RaceChrome } from "@/components/race/RaceChrome";
@@ -44,7 +44,10 @@ export default function LeaderboardPage() {
   const [scope, setScope] = useState<LeaderboardScope>("all_time");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [champion, setChampion] = useState<Champion | null>(null);
-  const [overallId, setOverallId] = useState<string | null>(null);
+  const [overall, setOverall] = useState<{
+    userId: string;
+    bestWpm: number;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,11 +62,17 @@ export default function LeaderboardPage() {
       if (cancelled) return;
       setEntries(board.ok ? board.data.entries : []);
       setChampion(champ.ok ? champ.data.champion : null);
-      if (scope === "all_time" && board.ok) {
-        setOverallId(board.data.entries[0]?.userId ?? null);
-      } else if (allTime?.ok) {
-        setOverallId(allTime.data.entries[0]?.userId ?? null);
-      }
+      const top =
+        scope === "all_time" && board.ok
+          ? board.data.entries[0]
+          : allTime?.ok
+            ? allTime.data.entries[0]
+            : null;
+      setOverall(
+        top
+          ? { userId: top.userId, bestWpm: top.bestWpm }
+          : null,
+      );
       setLoading(false);
     });
     return () => {
@@ -104,7 +113,13 @@ export default function LeaderboardPage() {
               {champion.username}
               <ChampionCrowns
                 daily
-                overall={!!overallId && champion.userId === overallId}
+                overall={!!overall && champion.userId === overall.userId}
+                dailyWpm={champion.bestWpm}
+                overallWpm={
+                  overall && champion.userId === overall.userId
+                    ? overall.bestWpm
+                    : null
+                }
               />
               <span className="font-mono font-normal text-chalk-muted">
                 · {Math.round(champion.bestWpm)} WPM
@@ -146,7 +161,7 @@ export default function LeaderboardPage() {
             const isDaily =
               !!champion && e.userId === champion.userId && scope !== "rating";
             const isOverall =
-              !!overallId && e.userId === overallId && scope !== "rating";
+              !!overall && e.userId === overall.userId && scope !== "rating";
             return (
               <li
                 key={`${e.userId}-${e.rank}`}
@@ -162,7 +177,12 @@ export default function LeaderboardPage() {
                   />
                   <span className="flex min-w-0 items-center gap-1.5 font-heading text-sm font-semibold uppercase tracking-wide text-chalk">
                     <span className="truncate">{e.username}</span>
-                    <ChampionCrowns daily={isDaily} overall={isOverall} />
+                    <ChampionCrowns
+                      daily={isDaily}
+                      overall={isOverall}
+                      dailyWpm={isDaily ? champion?.bestWpm : null}
+                      overallWpm={isOverall ? overall.bestWpm : null}
+                    />
                   </span>
                 </div>
                 <span className="shrink-0 font-mono text-sm text-cyan">
@@ -177,7 +197,7 @@ export default function LeaderboardPage() {
       </ol>
 
       <div className="mt-10 flex flex-wrap gap-3">
-        <ButtonLink href="/play">Modes</ButtonLink>
+        <ButtonLink href="/play">All races</ButtonLink>
         {signedIn ? (
           <ButtonLink href="/stats" variant="secondary">
             Your stats

@@ -16,7 +16,7 @@ export type RacerResult = {
 
 /** Optional ghost (replay of your personal best) for solo ghost races. */
 export type GhostResultInput = {
-  /** Elapsed ms from GO when the ghost finished the passage; null if unfinished. */
+  /** Elapsed ms on the typing clock when the ghost finished; null if unfinished. */
   finishElapsedMs: number | null;
   progress: number;
   wpm: number;
@@ -32,9 +32,10 @@ export function buildSoloResults(
   typing: TypingState,
   cpus: CpuRacer[],
   raceElapsedMs: number,
-  /** Elapsed ms from GO → player finish (for placement). WPM still uses typing duration. */
+  /** Finish clock for placement (GO for CPU races; typing-start for ghost). */
   playerFinishElapsedMs: number | null = null,
   ghost: GhostResultInput | null = null,
+  playerCarColor = "var(--cyan)",
 ): RacerResult[] {
   const passageLen = typing.passage.length;
 
@@ -52,7 +53,7 @@ export function buildSoloResults(
     accuracy: computeAccuracy(typing.correctIndex, typing.attempts),
     progress: passageLen ? typing.correctIndex / passageLen : 0,
     finishedAtMs: playerFinishElapsedMs,
-    bodyColor: "var(--cyan)",
+    bodyColor: playerCarColor,
   };
 
   const cpuResults: Omit<RacerResult, "placement">[] = cpus.map((cpu) => {
@@ -77,7 +78,7 @@ export function buildSoloResults(
         id: "ghost",
         name: "Your best",
         isYou: false,
-        isCpu: true,
+        isCpu: false,
         wpm: ghost.wpm,
         accuracy: ghost.accuracy,
         progress: ghost.progress,

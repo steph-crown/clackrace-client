@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { AuthNavActions } from "@/components/auth/AuthNavActions";
 import { raceAudio } from "@/lib/audio/manager";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils/cn";
+import { RaceChromeMenuLink } from "./RaceChromeMenuLink";
 
 type RaceChromeProps = {
   /** Highlight current mode in the menu. */
@@ -51,8 +51,13 @@ export function RaceChrome({
     setMuted(raceAudio.toggleMute());
   };
 
+  const close = () => setOpen(false);
+
   return (
-    <div ref={rootRef} className={cn("relative flex items-center gap-2", className)}>
+    <div
+      ref={rootRef}
+      className={cn("relative flex items-center gap-2", className)}
+    >
       {extras}
       {!compact ? <AuthNavActions size="sm" /> : null}
       <Button
@@ -87,81 +92,49 @@ export function RaceChrome({
           <p className="px-2 py-1 font-heading text-[10px] font-semibold uppercase tracking-[0.2em] text-chalk-muted">
             Switch mode
           </p>
-          <MenuLink
+          <RaceChromeMenuLink
             href="/play/solo"
             active={currentMode === "solo"}
-            onNavigate={() => setOpen(false)}
+            onNavigate={close}
           >
             Race CPU
-          </MenuLink>
-          <MenuLink
+          </RaceChromeMenuLink>
+          <RaceChromeMenuLink
             href="/play/public"
             active={currentMode === "public"}
-            onNavigate={() => setOpen(false)}
+            onNavigate={close}
           >
             Open Race
-          </MenuLink>
-          <MenuLink
+          </RaceChromeMenuLink>
+          <RaceChromeMenuLink
             href="/play/quick"
             active={currentMode === "quick"}
-            onNavigate={() => setOpen(false)}
+            onNavigate={close}
           >
             Quick Race
-          </MenuLink>
-          <MenuLink
+          </RaceChromeMenuLink>
+          <RaceChromeMenuLink
             href="/challenge"
             active={currentMode === "challenge"}
-            onNavigate={() => setOpen(false)}
+            onNavigate={close}
           >
             Challenge a Friend
-          </MenuLink>
+          </RaceChromeMenuLink>
           <div className="my-2 border-t border-lane/60" />
-          <MenuLink href="/leaderboard" onNavigate={() => setOpen(false)}>
+          <RaceChromeMenuLink href="/leaderboard" onNavigate={close}>
             Leaderboard
-          </MenuLink>
-          <MenuLink href="/stats" onNavigate={() => setOpen(false)}>
+          </RaceChromeMenuLink>
+          <RaceChromeMenuLink href="/stats" onNavigate={close}>
             Stats
-          </MenuLink>
-          <MenuLink href="/settings" onNavigate={() => setOpen(false)}>
+          </RaceChromeMenuLink>
+          <RaceChromeMenuLink href="/settings" onNavigate={close}>
             Settings
-          </MenuLink>
-          <MenuLink href="/play" onNavigate={() => setOpen(false)}>
-            All Modes
-          </MenuLink>
+          </RaceChromeMenuLink>
+          <RaceChromeMenuLink href="/play" onNavigate={close}>
+            All races
+          </RaceChromeMenuLink>
         </div>
       ) : null}
     </div>
-  );
-}
-
-function MenuLink({
-  href,
-  children,
-  active,
-  muted,
-  onNavigate,
-}: {
-  href: string;
-  children: React.ReactNode;
-  active?: boolean;
-  muted?: boolean;
-  onNavigate: () => void;
-}) {
-  return (
-    <Link
-      href={href}
-      role="menuitem"
-      onClick={onNavigate}
-      className={cn(
-        "block rounded-sm px-3 py-2 font-heading text-xs font-semibold uppercase tracking-wider transition-colors",
-        active
-          ? "bg-cyan/10 text-cyan"
-          : muted
-            ? "text-chalk-muted hover:bg-chalk/5 hover:text-chalk"
-            : "text-chalk hover:bg-chalk/5",
-      )}
-    >
-      {children}
-    </Link>
   );
 }

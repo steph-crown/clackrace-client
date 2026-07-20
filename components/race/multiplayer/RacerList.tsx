@@ -3,15 +3,20 @@ import type { SessionMember } from "./types";
 type RacerListProps = {
   members: SessionMember[];
   memberId: string | null;
+  maxPlayers?: number;
 };
 
-export function RacerList({ members, memberId }: RacerListProps) {
+export function RacerList({
+  members,
+  memberId,
+  maxPlayers = 8,
+}: RacerListProps) {
   const active = members.filter((m) => !m.disconnected);
 
   return (
     <section>
       <h2 className="font-heading text-xs font-semibold uppercase tracking-[0.2em] text-chalk-muted">
-        Racers ({active.length}/8)
+        Racers ({active.length}/{maxPlayers})
       </h2>
       <ul className="mt-3 space-y-2">
         {active.map((m) => (

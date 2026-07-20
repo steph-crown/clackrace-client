@@ -19,6 +19,7 @@ type LiveRaceScreenProps = {
   passage: string | null;
   typed: string;
   typingEnabled: boolean;
+  currentMode?: "public" | "quick" | "challenge";
   onChar: (char: string) => void;
   onBackspace: () => void;
 };
@@ -33,6 +34,7 @@ export function LiveRaceScreen({
   passage,
   typed,
   typingEnabled,
+  currentMode = "public",
   onChar,
   onBackspace,
 }: LiveRaceScreenProps) {
@@ -43,7 +45,7 @@ export function LiveRaceScreen({
         <Logo href="/play" size="sm" />
         <div className="flex items-center gap-3">
           <RaceHud wpm={wpm} accuracy={accuracy} />
-          <RaceChrome currentMode="public" compact />
+          <RaceChrome currentMode={currentMode} compact />
         </div>
       </div>
       <div className="relative mx-auto w-full max-w-4xl flex-1">

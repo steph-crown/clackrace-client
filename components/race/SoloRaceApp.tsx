@@ -147,13 +147,19 @@ export function SoloRaceApp({ autoBeat = false }: SoloRaceAppProps) {
           : null;
 
       let ghostInput = null;
+      // Ghost strokes + player typing share the first-key clock — not GO.
+      const playerTypingFinish =
+        finalTyping.finishedAtMs != null && finalTyping.startedAtMs != null
+          ? finalTyping.finishedAtMs - finalTyping.startedAtMs
+          : null;
       if (ghostModeRef.current && ghostMetaRef.current) {
         const passageLen = finalTyping.passage.length;
         const strokes = ghostStrokesRef.current;
-        const progress = ghostProgressAt(strokes, passageLen, elapsed);
+        const clockMs = playerTypingFinish ?? elapsed;
+        const progress = ghostProgressAt(strokes, passageLen, clockMs);
         const last = strokes[strokes.length - 1];
         const ghostFinished =
-          last != null && last.timestampMs <= elapsed && progress >= 1;
+          last != null && last.timestampMs <= clockMs && progress >= 1;
         ghostInput = {
           finishElapsedMs: ghostFinished ? last.timestampMs : null,
           progress,
@@ -166,8 +172,9 @@ export function SoloRaceApp({ autoBeat = false }: SoloRaceAppProps) {
         finalTyping,
         finalCpus,
         elapsed,
-        playerFinishElapsed,
+        ghostModeRef.current ? playerTypingFinish : playerFinishElapsed,
         ghostInput,
+        playerCarColor,
       );
       setResults(ranked);
       setPhase("results");
@@ -233,8 +240,16 @@ export function SoloRaceApp({ autoBeat = false }: SoloRaceAppProps) {
         cpusRef.current = nextCpus;
         setCpus(nextCpus);
       } else {
+        // Match ghost keystroke clock (from first correct key), not GO.
+        const tClock = typingRef.current;
+        const typingElapsed =
+          tClock?.startedAtMs != null ? now - tClock.startedAtMs : 0;
         setGhostProgress(
-          ghostProgressAt(ghostStrokesRef.current, passageLen, elapsed),
+          ghostProgressAt(
+            ghostStrokesRef.current,
+            passageLen,
+            typingElapsed,
+          ),
         );
       }
 
@@ -448,6 +463,10 @@ export function SoloRaceApp({ autoBeat = false }: SoloRaceAppProps) {
 
   const restartRace = () => {
     stopRaceRuntime();
+    if (ghostModeRef.current) {
+      void beginGhostCountdown();
+      return;
+    }
     beginCountdown();
   };
 

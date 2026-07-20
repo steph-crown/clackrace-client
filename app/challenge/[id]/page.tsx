@@ -61,7 +61,7 @@ export default function ChallengeInvitePage() {
         <>
           <p className="mt-3 text-sm text-magenta">{error}</p>
           <div className="mt-8 flex gap-3">
-            <ButtonLink href="/play">Modes</ButtonLink>
+            <ButtonLink href="/play">All races</ButtonLink>
             <ButtonLink href="/play/solo" variant="secondary">
               Race CPU
             </ButtonLink>

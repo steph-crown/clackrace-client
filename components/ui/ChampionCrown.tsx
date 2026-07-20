@@ -2,19 +2,19 @@ import { cn } from "@/lib/utils/cn";
 
 export type CrownKind = "daily" | "overall";
 
-const COPY: Record<
+const BASE: Record<
   CrownKind,
-  { label: string; detail: string; aria: string; color: string }
+  { label: string; fallbackDetail: string; aria: string; color: string }
 > = {
   daily: {
     label: "Daily Champion",
-    detail: "Top WPM today — holds until midnight UTC",
+    fallbackDetail: "Top WPM today — holds until midnight UTC",
     aria: "Daily Champion",
     color: "text-signal",
   },
   overall: {
     label: "Overall Champion",
-    detail: "All-time #1 peak WPM",
+    fallbackDetail: "All-time #1 peak WPM",
     aria: "Overall Champion",
     color: "text-cyan",
   },
@@ -22,18 +22,29 @@ const COPY: Record<
 
 type ChampionCrownProps = {
   kind: CrownKind;
+  /** Peak WPM that earned the crown — shown in the tooltip when known. */
+  wpm?: number | null;
   className?: string;
-  /** Slightly larger mark for page headers. */
   size?: "sm" | "md";
 };
 
 /** Hoverable crown mark for Daily / Overall champion status. */
 export function ChampionCrown({
   kind,
+  wpm,
   className,
   size = "sm",
 }: ChampionCrownProps) {
-  const copy = COPY[kind];
+  const copy = BASE[kind];
+  const detail =
+    wpm != null && wpm > 0
+      ? `${Math.round(wpm)} WPM · ${
+          kind === "daily"
+            ? "holds until midnight UTC"
+            : "all-time peak"
+        }`
+      : copy.fallbackDetail;
+
   return (
     <button
       type="button"
@@ -42,7 +53,11 @@ export function ChampionCrown({
         copy.color,
         className,
       )}
-      aria-label={copy.aria}
+      aria-label={
+        wpm != null && wpm > 0
+          ? `${copy.aria}, ${Math.round(wpm)} WPM`
+          : copy.aria
+      }
     >
       <svg
         viewBox="0 0 24 24"
@@ -68,31 +83,9 @@ export function ChampionCrown({
           {copy.label}
         </span>
         <span className="mt-0.5 block text-[10px] leading-snug text-chalk-muted">
-          {copy.detail}
+          {detail}
         </span>
       </span>
     </button>
-  );
-}
-
-type ChampionCrownsProps = {
-  daily?: boolean;
-  overall?: boolean;
-  size?: "sm" | "md";
-  className?: string;
-};
-
-export function ChampionCrowns({
-  daily,
-  overall,
-  size = "sm",
-  className,
-}: ChampionCrownsProps) {
-  if (!daily && !overall) return null;
-  return (
-    <span className={cn("inline-flex items-center gap-1", className)}>
-      {daily ? <ChampionCrown kind="daily" size={size} /> : null}
-      {overall ? <ChampionCrown kind="overall" size={size} /> : null}
-    </span>
   );
 }

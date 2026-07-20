@@ -326,6 +326,10 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
     return () => {
       cancelled = true;
       raceAudio.stopRaceBed();
+      // SPA navigations don't fire pagehide — free the seat on unmount.
+      if (socket.connected) {
+        socket.emit("session:leave");
+      }
       socket.off("session:state", onState);
       socket.off("session:toast", onToast);
       socket.off("session:error", onError);
@@ -494,6 +498,13 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
     );
   }
 
+  const chromeMode =
+    visibility === "matchmade"
+      ? "quick"
+      : visibility === "challenge"
+        ? "challenge"
+        : "public";
+
   return (
     <LiveRaceScreen
       toast={toast}
@@ -505,6 +516,7 @@ export function MultiplayerRaceApp({ sessionId }: Props) {
       passage={typing?.passage ?? null}
       typed={typing?.typed ?? ""}
       typingEnabled={phase === "racing"}
+      currentMode={chromeMode}
       onChar={onChar}
       onBackspace={onBackspace}
     />

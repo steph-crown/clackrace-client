@@ -23,7 +23,7 @@ export function JoinErrorState({ message }: JoinErrorStateProps) {
           </ButtonLink>
         ) : null}
         <ButtonLink href="/play" variant="secondary" size="sm">
-          ← Modes
+          ← All races
         </ButtonLink>
       </div>
     </PageShell>
