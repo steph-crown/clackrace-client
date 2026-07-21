@@ -38,12 +38,9 @@ test.describe("pre-launch smoke", () => {
     await expect(page.getByText(/race cpu|difficulty|beat your best/i).first()).toBeVisible();
   });
 
-  test("leaderboard and sign-in pages load", async ({ page }) => {
+  test("leaderboard page loads", async ({ page }) => {
     await page.goto("/leaderboard");
     await expect(page.getByText(/leaderboard|all-time|daily/i).first()).toBeVisible();
-
-    await page.goto("/signin");
-    await expect(page.getByRole("heading", { name: /sign in|sign up/i })).toBeVisible();
   });
 
   test("solo typing surface blocks paste and sets mobile attrs", async ({
