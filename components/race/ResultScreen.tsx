@@ -58,8 +58,9 @@ export function ResultScreen({
         {submitted === true ? (
           <p className="mt-3 text-xs text-chalk-muted">Run saved</p>
         ) : submitted === false ? (
-          <p className="mt-3 text-xs text-chalk-muted">
-            Couldn&apos;t reach server — run kept locally
+          <p className="mt-3 text-xs text-magenta">
+            Run not saved to your stats. Check your connection and try another
+            race.
           </p>
         ) : null}
       </div>

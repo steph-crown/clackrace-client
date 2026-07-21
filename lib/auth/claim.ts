@@ -1,11 +1,21 @@
 import { claimGuestRuns } from "@/lib/api/clack";
-import { getOrCreateGuestSessionToken } from "@/lib/guest-token";
+import {
+  clearGuestSessionToken,
+  getOrCreateGuestSessionToken,
+} from "@/lib/guest-token";
 
-/** After sign-in/up, reattach guest race rows to the account (PRD §6.6). */
+/**
+ * After sign-in/up, reattach guest race rows to the account (PRD §6.6).
+ * Always clears the guest token afterward so logout → guest → another login
+ * cannot attach races under the previous claim key.
+ */
 export async function claimGuestSessionIfPresent(): Promise<number> {
   const token = getOrCreateGuestSessionToken();
   if (!token) return 0;
-  const res = await claimGuestRuns(token);
-  if (!res.ok) return 0;
-  return res.data.claimed;
+  try {
+    const res = await claimGuestRuns(token);
+    return res.ok ? res.data.claimed : 0;
+  } finally {
+    clearGuestSessionToken();
+  }
 }

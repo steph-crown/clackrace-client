@@ -73,6 +73,8 @@ export function SoloRaceApp({ autoBeat = false }: SoloRaceAppProps) {
   const ghostMetaRef = useRef<{ wpm: number; accuracy: number } | null>(null);
   const ghostModeRef = useRef(false);
   const autoBeatStartedRef = useRef(false);
+  /** Race-start passage — finish must not rely on React state (countdown closes over stale startLoop). */
+  const passageRef = useRef<Passage | null>(null);
 
   useEffect(() => {
     void fetchPassages().then(setPassages);
@@ -193,7 +195,11 @@ export function SoloRaceApp({ autoBeat = false }: SoloRaceAppProps) {
       }
 
       const you = ranked.find((r) => r.isYou);
-      if (!you || !passage) return;
+      const racePassage = passageRef.current;
+      if (!you || !racePassage) {
+        setSubmitted(false);
+        return;
+      }
 
       const durationMs =
         finalTyping.finishedAtMs != null && finalTyping.startedAtMs != null
@@ -201,7 +207,7 @@ export function SoloRaceApp({ autoBeat = false }: SoloRaceAppProps) {
           : elapsed;
 
       void submitSoloResult({
-        passageId: passage.id,
+        passageId: racePassage.id,
         guestSessionToken: getOrCreateGuestSessionToken(),
         carColor: playerCarColor,
         finalWpm: you.wpm,
@@ -215,10 +221,10 @@ export function SoloRaceApp({ autoBeat = false }: SoloRaceAppProps) {
         mistakes: finalTyping.mistakes,
         mistypeCounts: finalTyping.mistypeCounts,
         keystrokes: finalTyping.keystrokes,
-        passageLength: passage.text.length,
+        passageLength: finalTyping.passage.length,
       }).then((res) => setSubmitted(res.ok));
     },
-    [passage, difficulty, playerCarColor],
+    [difficulty, playerCarColor],
   );
 
   const startLoop = useCallback(() => {
@@ -287,6 +293,7 @@ export function SoloRaceApp({ autoBeat = false }: SoloRaceAppProps) {
     const state = createTypingState(picked.text);
     const bots = createCpuRacers(difficulty, cpuCount);
 
+    passageRef.current = picked;
     setPassage(picked);
     setTyping(state);
     typingRef.current = state;
@@ -353,6 +360,7 @@ export function SoloRaceApp({ autoBeat = false }: SoloRaceAppProps) {
       source: "official",
     };
     const state = createTypingState(picked.text);
+    passageRef.current = picked;
     setPassage(picked);
     setTyping(state);
     typingRef.current = state;

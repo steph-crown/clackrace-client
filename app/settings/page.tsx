@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { fetchMe, patchMe } from "@/lib/api/clack";
 import { useSession, signOut } from "@/lib/auth/client";
+import { clearGuestSessionToken } from "@/lib/guest-token";
 import { CAR_COLOR_PALETTE } from "@/lib/car-colors";
 import { useChampionStatus } from "@/lib/hooks/useChampionStatus";
 import { CarSvg } from "@/components/race/CarSvg";
@@ -224,6 +225,7 @@ export default function SettingsPage() {
               variant="ghost"
               onClick={async () => {
                 await signOut();
+                clearGuestSessionToken();
                 router.push("/");
               }}
             >
