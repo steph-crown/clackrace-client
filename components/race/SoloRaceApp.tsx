@@ -280,8 +280,9 @@ export function SoloRaceApp({ autoBeat = false }: SoloRaceAppProps) {
     setGhostProgress(0);
 
     const pool = passages.length > 0 ? passages : undefined;
+    // CPU difficulty ≠ passage tier. Race text is medium/hard only (v1 pool).
     const passageDifficulty: PassageDifficulty =
-      difficulty === "expert" ? "hard" : difficulty;
+      difficulty === "hard" || difficulty === "expert" ? "hard" : "medium";
     const picked = pickPassage(passageDifficulty, pool);
     const state = createTypingState(picked.text);
     const bots = createCpuRacers(difficulty, cpuCount);

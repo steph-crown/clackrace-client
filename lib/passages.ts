@@ -7,43 +7,58 @@ export type Passage = {
   source: "official";
 };
 
-/** Static fallback when the passages API is unavailable (Phase 2 / offline). */
+/**
+ * Static fallback when the passages API is unavailable.
+ * Mirrors v1 policy: medium + hard only (no easy race text).
+ */
 export const STATIC_PASSAGES: Passage[] = [
   {
-    id: "static-easy-1",
-    difficulty: "easy",
-    source: "official",
-    text: "The quick brown fox jumps over the lazy dog near the track.",
-  },
-  {
-    id: "static-easy-2",
-    difficulty: "easy",
-    source: "official",
-    text: "Type each word with care and watch your car pull ahead of the pack.",
-  },
-  {
-    id: "static-medium-1",
+    id: "official-medium-01",
     difficulty: "medium",
     source: "official",
     text: "ClackRace rewards clean speed over messy bursts. Keep your fingers light, breathe between phrases, and let accuracy pull you into first place before the checkered flag drops.",
   },
   {
-    id: "static-medium-2",
+    id: "official-medium-02",
     difficulty: "medium",
     source: "official",
     text: "Night asphalt, neon lanes, and a keyboard that sounds like thunder. Every correct character moves the wheels. Every mistake stalls the engine for a heartbeat.",
   },
   {
-    id: "static-hard-1",
+    id: "official-medium-06",
+    difficulty: "medium",
+    source: "official",
+    text: "Your car is only as fast as your accuracy. Spray wrong letters and you spend the race in reverse, tapping backspace while the pack slips past in a blur of color.",
+  },
+  {
+    id: "official-medium-22",
+    difficulty: "medium",
+    source: "official",
+    text: "Accuracy compounds. Ninety-eight percent feels almost perfect until you watch the leader open a gap on every recovery. Fix errors early; late backspaces cost more than pride.",
+  },
+  {
+    id: "official-medium-36",
+    difficulty: "medium",
+    source: "official",
+    text: "If you only remember one rule, remember this: backspace is cheaper early and expensive late. Clear the mistake, then resume the line like the interruption never happened.",
+  },
+  {
+    id: "official-hard-01",
     difficulty: "hard",
     source: "official",
     text: "Championship pacing demands composure under pressure: punctuation, capitalization, and odd letter pairs all arrive without warning. The leaders do not flinch; they settle into rhythm and convert keystrokes into meters of track until the finish line is inevitable.",
   },
   {
-    id: "static-hard-2",
+    id: "official-hard-04",
     difficulty: "hard",
     source: "official",
-    text: "When the countdown hits go, hesitation costs placement. Trust muscle memory, ignore the rearview mirror of mistakes already made, and chase the ghost of your personal best through every turn of the passage.",
+    text: "Consider the semicolon: a tiny pause that ruins a streak if you expect a comma. Consider the apostrophe in it's and its. Small symbols decide big races more often than any dramatic final sprint across the last ten words.",
+  },
+  {
+    id: "official-hard-09",
+    difficulty: "hard",
+    source: "official",
+    text: "In the end the product is simple: type the passage, move the car, compare the numbers. Everything else — crowns, streaks, ratings, share cards — is scaffolding around that honest loop. Keep the loop sharp and the rest has somewhere real to stand.",
   },
 ];
 
@@ -51,7 +66,10 @@ export function pickPassage(
   difficulty: PassageDifficulty,
   pool: Passage[] = STATIC_PASSAGES,
 ): Passage {
-  const matches = pool.filter((p) => p.difficulty === difficulty);
-  const list = matches.length > 0 ? matches : pool;
-  return list[Math.floor(Math.random() * list.length)]!;
+  const want: PassageDifficulty =
+    difficulty === "easy" ? "medium" : difficulty;
+  const matches = pool.filter((p) => p.difficulty === want);
+  const list = matches.length > 0 ? matches : pool.filter((p) => p.difficulty !== "easy");
+  const fallback = list.length > 0 ? list : pool;
+  return fallback[Math.floor(Math.random() * fallback.length)]!;
 }

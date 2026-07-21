@@ -24,7 +24,7 @@ export function SignUpPrompt() {
       </p>
       <p className="mt-1 text-sm text-chalk-muted">{copy.body}</p>
       <div className="mt-3">
-        <ButtonLink href="/signin" size="sm">
+        <ButtonLink href="/signin?mode=signup" size="sm">
           Sign up free
         </ButtonLink>
       </div>

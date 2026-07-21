@@ -25,11 +25,14 @@ export function RaceChrome({
   extras,
 }: RaceChromeProps) {
   const [open, setOpen] = useState(false);
-  const [muted, setMuted] = useState(() =>
-    typeof window === "undefined" ? false : raceAudio.isMuted(),
-  );
+  // Default false on SSR + first paint; sync from localStorage after mount (avoids hydration mismatch).
+  const [muted, setMuted] = useState(false);
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMuted(raceAudio.isMuted());
+  }, []);
 
   useEffect(() => {
     if (!open) return;

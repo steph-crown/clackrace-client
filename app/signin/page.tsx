@@ -20,13 +20,19 @@ function SignInInner() {
   const router = useRouter();
   const search = useSearchParams();
   const nextPath = safeNext(search.get("next"));
+  const initialMode: Mode =
+    search.get("mode") === "signup" ? "signup" : "signin";
   const { data: session, isPending } = useSession();
-  const [mode, setMode] = useState<Mode>("signin");
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setMode(search.get("mode") === "signup" ? "signup" : "signin");
+  }, [search]);
 
   useEffect(() => {
     if (!isPending && session?.user) {
