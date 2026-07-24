@@ -121,8 +121,14 @@ export function LobbyScreen({
       </p>
 
       {!isChallenge && !isQuick ? (
-        <div className="mt-8">
+        <div className="mt-8 space-y-3">
           <InviteLinkCard shareUrl={shareUrl} />
+          <p className="max-w-lg text-sm text-chalk-muted">
+            Open Race holds up to{" "}
+            <span className="text-chalk">8 racers</span>. Share the link to fill
+            seats. With 2+ people you can start anytime - you do not need a full
+            lobby.
+          </p>
         </div>
       ) : null}
 
@@ -308,9 +314,22 @@ export function LobbyScreen({
       ) : isCreator ? (
         <div className="mt-10 flex flex-wrap gap-3">
           {phase === "lobby" ? (
-            <Button type="button" onClick={onStartRace}>
-              Start race
-            </Button>
+            <>
+              <Button
+                type="button"
+                onClick={onStartRace}
+                disabled={activeCount < 2}
+              >
+                Start race
+              </Button>
+              <p className="w-full text-sm text-chalk-muted">
+                {activeCount < 2
+                  ? "Waiting for at least one more racer (need 2 to start). Keep sharing the link."
+                  : activeCount < 8
+                    ? `${activeCount} of 8 seats filled. Start now, or wait for more joiners.`
+                    : "Lobby is full. Start whenever you're ready."}
+              </p>
+            </>
           ) : (
             <Button type="button" onClick={onPlayAgain}>
               Play again

@@ -15,6 +15,8 @@ export type SessionMember = {
   isCreator: boolean;
   pending: boolean;
   disconnected: boolean;
+  username?: string | null;
+  rating?: number | null;
 };
 
 export type SessionLeaderboardEntry = {

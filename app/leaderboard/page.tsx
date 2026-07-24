@@ -112,7 +112,13 @@ export default function LeaderboardPage() {
               Daily Champion
             </p>
             <p className="flex flex-wrap items-center gap-1.5 font-heading text-sm font-bold uppercase text-chalk">
-              {champion.username}
+              <Link
+                href={`/u/${encodeURIComponent(champion.username)}`}
+                className="underline-offset-2 hover:text-cyan hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {champion.username}
+              </Link>
               <ChampionCrowns
                 daily
                 overall={!!overall && champion.userId === overall.userId}
@@ -178,7 +184,12 @@ export default function LeaderboardPage() {
                     style={{ background: e.carColor }}
                   />
                   <span className="flex min-w-0 items-center gap-1.5 font-heading text-sm font-semibold uppercase tracking-wide text-chalk">
-                    <span className="truncate">{e.username}</span>
+                    <Link
+                      href={`/u/${encodeURIComponent(e.username)}`}
+                      className="truncate underline-offset-2 hover:text-cyan hover:underline"
+                    >
+                      {e.username}
+                    </Link>
                     <ChampionCrowns
                       daily={isDaily}
                       overall={isOverall}

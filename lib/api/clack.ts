@@ -226,6 +226,23 @@ export async function fetchMyStats() {
   }>("/stats/me");
 }
 
+export async function fetchPublicStats(username: string) {
+  return clackFetch<{
+    userId: string;
+    username: string;
+    carColor: string;
+    elo: { rating: number; racesCounted: number; kFactorTier: string };
+    series: { wpm: number; accuracy: number; at: string; mode: string }[];
+    personalBest: {
+      wpm: number;
+      accuracy: number;
+      mode: string;
+      achievedAt: string;
+    } | null;
+    mistypeHeatmap: Record<string, number>;
+  }>(`/stats/u/${encodeURIComponent(username)}`);
+}
+
 export async function fetchGhost() {
   return clackFetch<{
     bestWpm: number;
