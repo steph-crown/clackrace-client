@@ -1,6 +1,8 @@
-# pnpm 11+ settings (Corepack may resolve to pnpm 11).
-# sharp / unrs-resolver: no postinstall needed for local Next dev.
-# esbuild: required by tooling (tsx/vitest/etc. when present).
+# Single-package project — `packages` is required when this file exists.
+packages:
+  - "."
+
+# pnpm 11+ build script permissions.
 allowBuilds:
   esbuild: true
   sharp: false
